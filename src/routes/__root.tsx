@@ -1,10 +1,18 @@
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router'
+import {
+  Outlet,
+  createRootRoute,
+  HeadContent,
+  Scripts,
+} from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
+import { NotFound } from '@/components/not-found'
 
 import appCss from '../styles.css?url'
 
 export const Route = createRootRoute({
+  notFoundComponent: NotFound,
+  component: RootComponent,
   head: () => ({
     meta: [
       {
@@ -28,6 +36,10 @@ export const Route = createRootRoute({
 
   shellComponent: RootDocument,
 })
+
+function RootComponent() {
+  return <Outlet />
+}
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (

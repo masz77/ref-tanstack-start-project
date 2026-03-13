@@ -31,6 +31,10 @@ import {
   UserIcon,
 } from '@phosphor-icons/react'
 import * as React from 'react'
+import { DemoForm } from '@/components/demo-form'
+import { DemoPacer } from '@/components/demo-pacer'
+import { DemoTable } from '@/components/demo-table'
+import { DemoVirtual } from '@/components/demo-virtual'
 import { Example, ExampleWrapper } from '@/components/example'
 import {
   AlertDialog,
@@ -97,6 +101,18 @@ export function ComponentExample() {
     <ExampleWrapper>
       <CardExample />
       <FormExample />
+      <Example title="TanStack Form">
+        <DemoForm />
+      </Example>
+      <Example title="TanStack Pacer" containerClassName="md:col-span-2">
+        <DemoPacer />
+      </Example>
+      <Example title="TanStack Table" containerClassName="md:col-span-2">
+        <DemoTable />
+      </Example>
+      <Example title="TanStack Virtual" containerClassName="md:col-span-2">
+        <DemoVirtual />
+      </Example>
     </ExampleWrapper>
   )
 }
@@ -108,7 +124,7 @@ function CardExample() {
         <div className="bg-primary absolute inset-0 z-30 aspect-video opacity-50 mix-blend-color" />
         <img
           src="https://images.unsplash.com/photo-1604076850742-4c7221f3101b?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-          alt="Photo by mymind on Unsplash"
+          alt="Colorful abstract art by mymind on Unsplash"
           title="Photo by mymind on Unsplash"
           className="relative z-20 aspect-video w-full object-cover brightness-60 grayscale"
         />
@@ -160,6 +176,12 @@ const roleItems = [
 ]
 
 function FormExample() {
+  const id = React.useId()
+  const nameId = `${id}-name`
+  const roleId = `${id}-role`
+  const frameworkId = `${id}-framework`
+  const commentsId = `${id}-comments`
+
   const [notifications, setNotifications] = React.useState({
     email: true,
     sms: false,
@@ -411,13 +433,13 @@ function FormExample() {
             <FieldGroup>
               <div className="grid grid-cols-2 gap-4">
                 <Field>
-                  <FieldLabel htmlFor="small-form-name">Name</FieldLabel>
-                  <Input id="small-form-name" placeholder="Enter your name" required />
+                  <FieldLabel htmlFor={nameId}>Name</FieldLabel>
+                  <Input id={nameId} placeholder="Enter your name" required />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="small-form-role">Role</FieldLabel>
+                  <FieldLabel htmlFor={roleId}>Role</FieldLabel>
                   <Select items={roleItems} defaultValue={null}>
-                    <SelectTrigger id="small-form-role">
+                    <SelectTrigger id={roleId}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -433,13 +455,9 @@ function FormExample() {
                 </Field>
               </div>
               <Field>
-                <FieldLabel htmlFor="small-form-framework">Framework</FieldLabel>
+                <FieldLabel htmlFor={frameworkId}>Framework</FieldLabel>
                 <Combobox items={frameworks}>
-                  <ComboboxInput
-                    id="small-form-framework"
-                    placeholder="Select a framework"
-                    required
-                  />
+                  <ComboboxInput id={frameworkId} placeholder="Select a framework" required />
                   <ComboboxContent>
                     <ComboboxEmpty>No frameworks found.</ComboboxEmpty>
                     <ComboboxList>
@@ -453,8 +471,8 @@ function FormExample() {
                 </Combobox>
               </Field>
               <Field>
-                <FieldLabel htmlFor="small-form-comments">Comments</FieldLabel>
-                <Textarea id="small-form-comments" placeholder="Add any additional comments" />
+                <FieldLabel htmlFor={commentsId}>Comments</FieldLabel>
+                <Textarea id={commentsId} placeholder="Add any additional comments" />
               </Field>
               <Field orientation="horizontal">
                 <Button type="submit">Submit</Button>

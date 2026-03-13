@@ -41,6 +41,10 @@
   },
   "linter": {
     "enabled": true,
+    "domains": {
+      "react": "all",
+      "test": "recommended"
+    },
     "rules": {
       "recommended": true,
       "complexity": {
@@ -58,7 +62,8 @@
         "noNonNullAssertion": "off",
         "useFilenamingConvention": "off",
         "useNamingConvention": "off",
-        "noParameterAssign": "off"
+        "noParameterAssign": "off",
+        "useComponentExportOnlyModules": "off"
       },
       "suspicious": {
         "noExplicitAny": "off",

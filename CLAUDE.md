@@ -4,23 +4,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Gym landing page for "Fitality Clubs" — a fitness/wellness brand. Built with TanStack Start (full-stack React framework with SSR) on Nitro server, using file-based routing.
+Gym landing page for "Fitality Clubs" — a fitness/wellness brand. Built with TanStack Start (full-stack React framework with SSR), deployed to Cloudflare Workers. Uses file-based routing.
 
 ## Commands
 
 ```bash
-bun run dev          # Start dev server on port 3000
+bun run dev          # Start dev server (Vite)
 bun run build        # Production build
 bun run preview      # Preview production build
-bun run test         # Run tests (vitest)
+bun run test         # Run all tests (vitest)
+bunx vitest run src/path/to/test.ts  # Run a single test file
 bun run lint         # Lint with Biome
 bun run format       # Format with Biome (auto-fix)
 bun run check        # Biome check + auto-fix
+bun run build:deploy # Build + deploy to Cloudflare Workers
 ```
 
 ## Tech Stack
 
-- **Framework**: TanStack Start (React 19 + TanStack Router + Nitro server)
+- **Framework**: TanStack Start (React 19 + TanStack Router + Vite)
+- **Deployment**: Cloudflare Workers (`@cloudflare/vite-plugin`, config in `wrangler.jsonc`)
 - **Routing**: File-based via `src/routes/` — route tree auto-generated to `src/routeTree.gen.ts` (never edit this file)
 - **Styling**: Tailwind CSS v4 (CSS-first config in `src/styles.css`, no `tailwind.config.js`)
 - **UI Components**: shadcn (base-nova style) with Base UI primitives (`@base-ui/react`) — components in `src/components/ui/`
