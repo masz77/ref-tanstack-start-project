@@ -13,3 +13,10 @@ count.txt
 todos.json
 .claude
 
+
+# monorepo build outputs
+apps/*/dist
+packages/*/dist
+apps/*/.wrangler
+apps/*/node_modules
+packages/*/node_modules
