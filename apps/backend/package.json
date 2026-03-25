@@ -1,0 +1,45 @@
+{
+  "name": "@repo/backend",
+  "type": "module",
+  "version": "0.1.0",
+  "license": "MIT",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "tsc --noEmit",
+    "d1:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "d1:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:pull": "drizzle-kit pull",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@hono/zod-openapi": "^0.19.8",
+    "@libsql/client": "^0.15.8",
+    "@repo/shared": "workspace:*",
+    "@scalar/hono-api-reference": "^0.9.2",
+    "better-auth": "^1.2.8",
+    "better-auth-cloudflare": "0.2.7",
+    "drizzle-orm": "^0.44.6",
+    "drizzle-zod": "^0.5.1",
+    "hono": "^4.7.11",
+    "hono-rate-limiter": "^0.4.2",
+    "stoker": "1.4.3",
+    "zod": "^3.25.51"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250224.0",
+    "@types/node": "^24.0.10",
+    "bun-types": "^1.2.20",
+    "cross-env": "^7.0.3",
+    "drizzle-kit": "^0.31.5",
+    "tsc-alias": "^1.8.16",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.1",
+    "wrangler": "^4.44.0"
+  }
+}

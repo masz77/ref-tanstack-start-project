@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "baseUrl": "./",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": [
+      "node",
+      "@cloudflare/workers-types"
+    ],
+    "strict": true,
+    "outDir": "./dist",
+    "skipLibCheck": true
+  },
+  "exclude": [
+    "src/db/migrations/**/*",
+    "src/db/_config/**/*"
+  ],
+  "tsc-alias": {
+    "resolveFullPaths": true
+  }
+}

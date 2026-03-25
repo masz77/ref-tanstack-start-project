@@ -1,0 +1,31 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "compatibility_date": "2025-10-08",
+  "main": "src/index.ts",
+  "name": "fitality-clubs-api",
+  "upload_source_maps": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_id": "REPLACE_WITH_YOUR_D1_ID",
+      "migrations_dir": "src/db/migrations",
+      "database_name": "fitality-clubs-db"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "KV_BINDING",
+      "id": "REPLACE_WITH_YOUR_KV_ID"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  },
+  "placement": {
+    "mode": "smart"
+  },
+  "assets": {
+    "directory": "./public/",
+    "binding": "ASSETS"
+  }
+}
