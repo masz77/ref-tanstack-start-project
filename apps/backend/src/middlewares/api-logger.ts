@@ -57,7 +57,7 @@ export function apiLoggingMiddleware(): MiddlewareHandler {
           const clonedReq = c.req.raw.clone();
           const formData = await clonedReq.formData();
           const formObj: Record<string, string> = {};
-          formData.forEach((value, key) => {
+          formData.forEach((_value, key) => {
             formObj[key] = '[FORM_DATA]';
           });
           requestBody = formObj;

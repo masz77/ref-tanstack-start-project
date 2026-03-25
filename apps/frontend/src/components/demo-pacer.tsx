@@ -49,7 +49,7 @@ function DebouncedSearch() {
             <Badge variant="secondary" className="font-mono">
               {debouncedQuery || '(empty)'}
             </Badge>
-            {debouncer.isPending && (
+            {debouncer.state.isPending && (
               <SpinnerGapIcon className="text-muted-foreground size-4 animate-spin" />
             )}
           </div>
@@ -105,7 +105,7 @@ function ThrottledCounter() {
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground w-32 shrink-0">Executions:</span>
             <Badge variant="default" className="font-mono tabular-nums">
-              {throttler.executionCount}
+              {throttler.state.executionCount}
             </Badge>
           </div>
         </div>
@@ -122,7 +122,7 @@ function BatchedLogger() {
     setProcessedBatches((prev) => [...prev, items])
   }, [])
 
-  const batcher = useBatcher<string>(handleBatch, { maxSize: 5, wait: 3000 }, (state) => ({
+  const batcher = useBatcher<string, { size: number; executionCount: number; totalItemsProcessed: number }>(handleBatch, { maxSize: 5, wait: 3000 }, (state) => ({
     size: state.size,
     executionCount: state.executionCount,
     totalItemsProcessed: state.totalItemsProcessed,
@@ -170,19 +170,19 @@ function BatchedLogger() {
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground w-36 shrink-0">Queue size:</span>
             <Badge variant="outline" className="font-mono tabular-nums">
-              {batcher.size} / 5
+              {batcher.state.size} / 5
             </Badge>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground w-36 shrink-0">Batches processed:</span>
             <Badge variant="secondary" className="font-mono tabular-nums">
-              {batcher.executionCount}
+              {batcher.state.executionCount}
             </Badge>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-muted-foreground w-36 shrink-0">Total items sent:</span>
             <Badge variant="default" className="font-mono tabular-nums">
-              {batcher.totalItemsProcessed}
+              {batcher.state.totalItemsProcessed}
             </Badge>
           </div>
         </div>

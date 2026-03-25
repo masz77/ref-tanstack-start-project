@@ -86,7 +86,7 @@ export function DemoForm() {
                   />
                   {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
                     <FieldError>
-                      {field.state.meta.errors[0]?.message ?? field.state.meta.errors[0]}
+                      {field.state.meta.errors[0]}
                     </FieldError>
                   )}
                 </Field>
@@ -116,7 +116,7 @@ export function DemoForm() {
                   />
                   {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
                     <FieldError>
-                      {field.state.meta.errors[0]?.message ?? field.state.meta.errors[0]}
+                      {field.state.meta.errors[0]}
                     </FieldError>
                   )}
                 </Field>
@@ -170,7 +170,7 @@ export function DemoForm() {
                   />
                   {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
                     <FieldError>
-                      {field.state.meta.errors[0]?.message ?? field.state.meta.errors[0]}
+                      {field.state.meta.errors[0]}
                     </FieldError>
                   )}
                 </Field>
