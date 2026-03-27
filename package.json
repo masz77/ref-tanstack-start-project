@@ -1,6 +1,7 @@
 {
   "name": "fitality-monorepo",
   "private": true,
+  "packageManager": "bun@1.2.0",
   "type": "module",
   "workspaces": [
     "apps/*",

@@ -12,12 +12,12 @@
       "database_name": "fitality-clubs-db"
     }
   ],
-  "kv_namespaces": [
-    {
-      "binding": "KV_BINDING",
-      "id": "REPLACE_WITH_YOUR_KV_ID"
-    }
-  ],
+  // "kv_namespaces": [
+  //   {
+  //     "binding": "KV_BINDING",
+  //     "id": "REPLACE_WITH_YOUR_KV_ID"
+  //   }
+  // ],
   "observability": {
     "enabled": true
   },
