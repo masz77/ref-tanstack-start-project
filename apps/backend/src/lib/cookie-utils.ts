@@ -1,4 +1,7 @@
-function isProductionEnvironment() {
+/**
+ * Check if the application is running in production environment
+ */
+export function isProductionEnvironment() {
   if (typeof process !== "undefined" && process.env?.NODE_ENV) {
     return process.env.NODE_ENV === "production";
   }
@@ -17,9 +20,9 @@ export function getRefreshTokenCookieOptions() {
   return {
     httpOnly: true,
     secure: isProductionEnvironment(), // Only secure in production
-    sameSite: 'Lax' as const,
+    sameSite: "Lax" as const,
     maxAge: 60 * 60 * 24 * 30, // 30 days
-    path: '/'
+    path: "/",
   };
 }
 
@@ -27,5 +30,5 @@ export function getRefreshTokenCookieOptions() {
  * Cookie names used in the application
  */
 export const COOKIE_NAMES = {
-  REFRESH_TOKEN: 'refresh_token'
+  REFRESH_TOKEN: "refresh_token",
 } as const;

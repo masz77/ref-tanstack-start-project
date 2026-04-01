@@ -19,6 +19,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@hono/event-emitter": "^2.0.0",
     "@hono/zod-openapi": "^0.19.8",
     "@libsql/client": "^0.15.8",
     "@repo/shared": "workspace:*",

@@ -440,7 +440,12 @@ function FormExample() {
                   <FieldLabel htmlFor={roleId}>Role</FieldLabel>
                   <Select items={roleItems} defaultValue={null}>
                     <SelectTrigger id={roleId}>
-                      <SelectValue />
+                      <SelectValue>
+                        {(value: string | null) =>
+                          value
+                            ? (roleItems.find((i) => i.value === value)?.label ?? value)
+                            : null}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>

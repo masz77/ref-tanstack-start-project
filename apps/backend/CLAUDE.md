@@ -44,8 +44,9 @@ When adapting this template for a new project:
 
 ### Code Quality
 - `bun run typecheck` - Run TypeScript type checking
-- `bun run lint` - Run ESLint
-- `bun run lint:fix` - Auto-fix ESLint issues
+- `bun run lint` - Run Biome linting and formatting checks
+- `bun run lint:fix` - Auto-fix Biome issues
+- `bun run format` - Format code with Biome
 - `bun run test` - Run tests with Vitest
 - `bun run test:node` - Run tests once
 
@@ -85,7 +86,7 @@ When adapting this template for a new project:
 - Environment validation with Zod schemas
 - Bindings configured in `wrangler.toml`: D1, KV, Durable Objects
 - Secrets in `.dev.vars` for local, Cloudflare secrets for production
-- Required secrets: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `STRIPE_SECRET_KEY`
+- Required secrets: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `STRIPE_SECRET_KEY`, `LOGS_API_KEY`
 
 #### Database Layer
 - Schema definitions in `src/db/schema.ts` optimized for D1 (SQLite)
@@ -143,10 +144,10 @@ When adapting this template for a new project:
 - Use `getCurrentUser(c)` helper for type-safe user access
 
 #### Code Quality Rules
-- ESLint with `@antfu/eslint-config` and custom rules
+- Biome for linting and formatting (configured in `biome.json`)
+- Style: 2-space indent, double quotes, semicolons always
 - Kebab-case filenames enforced
 - No `process.env` usage (use `env` from `@/env` instead)
-- Sorted imports with perfectionist plugin
 
 ### Testing
 - Vitest configuration with path alias support

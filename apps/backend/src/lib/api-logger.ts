@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 
-import type { LogData } from "@/routes/v1/logs/logs.service";
-import type { createLogsService } from "@/routes/v1/logs/logs.service";
+import type { LogData } from "@/features/logs/service";
+import type { createLogsService } from "@/features/logs/service";
 
 type LogsServiceInstance = ReturnType<typeof createLogsService>;
 
@@ -46,13 +46,7 @@ function sanitizeObject(value: unknown): unknown {
 
 export class ApiLogger {
   static shouldLog(path: string, method: string) {
-    const skipPaths = [
-      "/health",
-      "/doc",
-      "/reference",
-      "/favicon.ico",
-      "/v1/logs",
-    ];
+    const skipPaths = ["/health", "/doc", "/reference", "/favicon.ico", "/v1/logs"];
 
     if (method === "OPTIONS") {
       return false;
@@ -99,6 +93,70 @@ export class ApiLogger {
     }
 
     return sanitizeObject(body);
+  }
+
+  static async parseRequestBody(clonedRequest: Request, contentType: string): Promise<unknown> {
+    try {
+      if (contentType.includes("application/json")) {
+        const bodyText = await clonedRequest.text();
+        if (bodyText) {
+          const requestBody = JSON.parse(bodyText);
+          return ApiLogger.sanitizeRequestBody(requestBody);
+        }
+      } else if (contentType.includes("application/x-www-form-urlencoded")) {
+        // For form data, we'll capture the keys but not values for privacy
+        const formData = await clonedRequest.formData();
+        const formObj: Record<string, string> = {};
+        formData.forEach((_value, key) => {
+          formObj[key] = "[FORM_DATA]";
+        });
+        return formObj;
+      } else if (contentType.includes("multipart/form-data")) {
+        return { type: "multipart/form-data", message: "[FILE_UPLOAD]" };
+      }
+    } catch (error) {
+      return { error: "Failed to parse request body" };
+    }
+
+    return null;
+  }
+
+  static async parseResponseBody(
+    clonedResponse: Response,
+    responseContentType: string,
+    statusCode?: number,
+  ): Promise<unknown> {
+    if (responseContentType.includes("application/json")) {
+      try {
+        const responseText = await clonedResponse.text();
+        if (responseText) {
+          const responseBody = JSON.parse(responseText);
+          return ApiLogger.sanitizeResponseBody(responseBody, statusCode);
+        }
+      } catch (error) {
+        // If we can't parse the response, just note it
+        return { message: "[UNPARSEABLE_RESPONSE]" };
+      }
+    } else if (responseContentType.includes("text/")) {
+      try {
+        const responseText = await clonedResponse.text();
+        if (responseText && responseText.length < 1000) {
+          // Only log short text responses
+          return { text: responseText };
+        } else {
+          return { message: "[TEXT_RESPONSE]", length: responseText.length };
+        }
+      } catch (error) {
+        return { message: "[TEXT_RESPONSE_ERROR]" };
+      }
+    } else {
+      return {
+        message: "[NON_JSON_RESPONSE]",
+        contentType: responseContentType,
+      };
+    }
+
+    return null;
   }
 
   static log(logsService: LogsServiceInstance, data: LogData) {

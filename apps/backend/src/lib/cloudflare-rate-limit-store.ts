@@ -1,8 +1,4 @@
-import type {
-  ClientRateLimitInfo,
-  ConfigType,
-  Store,
-} from "hono-rate-limiter";
+import type { ClientRateLimitInfo, ConfigType, Store } from "hono-rate-limiter";
 
 /**
  * Cloudflare Workers compliant in-memory rate limit store.
@@ -13,21 +9,33 @@ import type {
 export class CloudflareRateLimitStore implements Store {
   private windowMs = 60_000;
 
-  private readonly clients = new Map<string, ClientRateLimitInfo & {
-    expiresAt: number;
-    lastSeen: number;
-  }>();
+  private readonly clients = new Map<
+    string,
+    ClientRateLimitInfo & {
+      expiresAt: number;
+      lastSeen: number;
+    }
+  >();
 
-  init(options: ConfigType): void {
+  private requestCounter = 0;
+  private readonly cleanupInterval = 100;
+
+  init(options: Partial<ConfigType>): void {
     this.windowMs = options.windowMs ?? this.windowMs;
   }
 
   async get(key: string): Promise<ClientRateLimitInfo | undefined> {
-    this.cleanupExpired();
     const entry = this.clients.get(key);
     if (!entry) {
       return undefined;
     }
+
+    // Lazy expiry check - delete if expired
+    if (entry.expiresAt <= Date.now()) {
+      this.clients.delete(key);
+      return undefined;
+    }
+
     return {
       totalHits: entry.totalHits,
       resetTime: entry.resetTime,
@@ -40,7 +48,13 @@ export class CloudflareRateLimitStore implements Store {
     entry.totalHits += 1;
     entry.lastSeen = now;
     this.clients.set(key, entry);
-    this.cleanupExpired(now);
+
+    // Periodic batch cleanup to prevent unbounded memory growth
+    this.requestCounter += 1;
+    if (this.requestCounter >= this.cleanupInterval) {
+      this.requestCounter = 0;
+      this.cleanupExpired(now);
+    }
 
     return {
       totalHits: entry.totalHits,
@@ -51,6 +65,12 @@ export class CloudflareRateLimitStore implements Store {
   async decrement(key: string): Promise<void> {
     const entry = this.clients.get(key);
     if (!entry) {
+      return;
+    }
+
+    // Lazy expiry check - consistent with get() behavior
+    if (entry.expiresAt <= Date.now()) {
+      this.clients.delete(key);
       return;
     }
 

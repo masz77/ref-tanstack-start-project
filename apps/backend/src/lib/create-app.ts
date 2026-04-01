@@ -1,18 +1,26 @@
 import type { IncomingRequestCfProperties } from "@cloudflare/workers-types";
 import type { MiddlewareHandler, Schema } from "hono";
 
+import { createEmitter } from "@hono/event-emitter";
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { cors } from "hono/cors";
 import { rateLimiter } from "hono-rate-limiter";
+import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
 import { notFound, onError, serveEmojiFavicon } from "stoker/middlewares";
 import { defaultHook } from "stoker/openapi";
 
-import { apiLoggingMiddleware } from "@/middlewares/api-logger";
-import { CloudflareRateLimitStore } from "@/lib/cloudflare-rate-limit-store";
 import { createAuth } from "@/auth";
+import {
+  onAuthSessionCreated,
+  onSubscriptionChanged,
+  onUserCreated,
+  onUserDeleted,
+} from "@/infrastructure/events/listeners";
+import type { AppEvents } from "@/infrastructure/events/types";
+import { CloudflareRateLimitStore } from "@/lib/cloudflare-rate-limit-store";
+import { apiLoggingMiddleware } from "@/middleware/api-logger";
 
-import type { AppBindings, AppOpenAPI } from "./types";
+import type { AppBindings, AppOpenAPI } from "@/shared/types";
 
 export function createRouter(): OpenAPIHono<AppBindings> {
   return new OpenAPIHono<AppBindings>({
@@ -35,7 +43,8 @@ function resolveCorsOrigins(env: Record<string, unknown>) {
       .filter(Boolean);
   }
 
-  return "*";
+  // Default to common local dev origins when CORS_ORIGINS not configured
+  return ["http://localhost:3000", "http://localhost:5173", "http://localhost:8787"];
 }
 
 function resolveCorsMaxAge(env: Record<string, unknown>) {
@@ -69,6 +78,15 @@ function createDynamicCorsMiddleware(): MiddlewareHandler<AppBindings> {
 }
 
 export default function createApp(): OpenAPIHono<AppBindings> {
+  // Create emitter with registered listeners
+  const emitter = createEmitter<AppEvents>();
+
+  // Register event listeners
+  emitter.on("user:created", onUserCreated);
+  emitter.on("user:deleted", onUserDeleted);
+  emitter.on("auth:session-created", onAuthSessionCreated);
+  emitter.on("subscription:changed", onSubscriptionChanged);
+
   const app = createRouter();
   app
     .use(requestId())
@@ -77,21 +95,24 @@ export default function createApp(): OpenAPIHono<AppBindings> {
       const cf = (c.req.raw as Request & { cf?: IncomingRequestCfProperties }).cf;
       const auth = createAuth(c.env, cf);
       c.set("auth", auth);
+      c.set("emitter", emitter);
       await next();
     })
-    .use(rateLimiter({
-      windowMs: 15 * 60 * 1000, // 15 minutes
-      limit: 100, // limit each IP to 100 requests per windowMs
-      store: new CloudflareRateLimitStore(),
-      keyGenerator: (c) => c.req.header("cf-connecting-ip")
-        ?? c.req.header("x-forwarded-for")
-        ?? c.req.header("x-real-ip")
-        ?? c.req.raw.headers.get("host")
-        ?? "unknown",
-    }))
+    .use(
+      rateLimiter({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        limit: 100, // limit each IP to 100 requests per windowMs
+        store: new CloudflareRateLimitStore(),
+        keyGenerator: (c) =>
+          c.req.header("cf-connecting-ip") ??
+          c.req.header("x-forwarded-for") ??
+          c.req.header("x-real-ip") ??
+          c.req.raw.headers.get("host") ??
+          "unknown",
+      }),
+    )
     .use(serveEmojiFavicon("📝"))
     .use(apiLoggingMiddleware());
-
 
   app.notFound(notFound);
   app.onError(onError);

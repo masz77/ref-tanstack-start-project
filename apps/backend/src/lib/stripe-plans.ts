@@ -18,15 +18,11 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
     price: 0,
     currency: "usd",
     interval: "month",
-    features: [
-      "Basic features",
-      "Up to 100 API requests/month",
-      "Community support"
-    ],
+    features: ["Basic features", "Up to 100 API requests/month", "Community support"],
     stripePriceId: "", // No Stripe price for free plan
-    stripeProductId: ""
+    stripeProductId: "",
   },
-  
+
   starter: {
     id: "starter",
     name: "Starter",
@@ -34,14 +30,9 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
     price: 999, // $9.99
     currency: "usd",
     interval: "month",
-    features: [
-      "All Free features",
-      "Up to 10,000 API requests/month",
-      "Email support",
-      "Priority processing"
-    ],
+    features: ["All Free features", "Up to 10,000 API requests/month", "Email support", "Priority processing"],
     stripePriceId: "price_starter_monthly", // Replace with actual Stripe price ID
-    stripeProductId: "prod_starter" // Replace with actual Stripe product ID
+    stripeProductId: "prod_starter", // Replace with actual Stripe product ID
   },
 
   pro: {
@@ -56,10 +47,10 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       "Up to 100,000 API requests/month",
       "Priority support",
       "Advanced analytics",
-      "Custom integrations"
+      "Custom integrations",
     ],
     stripePriceId: "price_pro_monthly", // Replace with actual Stripe price ID
-    stripeProductId: "prod_pro" // Replace with actual Stripe product ID
+    stripeProductId: "prod_pro", // Replace with actual Stripe product ID
   },
 
   enterprise: {
@@ -75,11 +66,11 @@ export const SUBSCRIPTION_PLANS: Record<string, SubscriptionPlan> = {
       "24/7 phone support",
       "Custom SLA",
       "Dedicated account manager",
-      "On-premise deployment options"
+      "On-premise deployment options",
     ],
     stripePriceId: "price_enterprise_monthly", // Replace with actual Stripe price ID
-    stripeProductId: "prod_enterprise" // Replace with actual Stripe product ID
-  }
+    stripeProductId: "prod_enterprise", // Replace with actual Stripe product ID
+  },
 } as const;
 
 export type PlanId = keyof typeof SUBSCRIPTION_PLANS;
@@ -93,5 +84,5 @@ export function getAllPlans(): SubscriptionPlan[] {
 }
 
 export function getPaidPlans(): SubscriptionPlan[] {
-  return Object.values(SUBSCRIPTION_PLANS).filter(plan => plan.price > 0);
+  return Object.values(SUBSCRIPTION_PLANS).filter((plan) => plan.price > 0);
 }

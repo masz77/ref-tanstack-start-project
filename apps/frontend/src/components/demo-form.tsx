@@ -133,7 +133,12 @@ export function DemoForm() {
                     onValueChange={(value) => field.handleChange(value as string)}
                   >
                     <SelectTrigger id={roleId}>
-                      <SelectValue placeholder="Select a role" />
+                      <SelectValue>
+                        {(value: string | null) =>
+                          value
+                            ? (roleItems.find((i) => i.value === value)?.label ?? value)
+                            : 'Select a role'}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>

@@ -12,6 +12,7 @@
       "name": "@repo/backend",
       "version": "0.1.0",
       "dependencies": {
+        "@hono/event-emitter": "^2.0.0",
         "@hono/zod-openapi": "^0.19.8",
         "@libsql/client": "^0.15.8",
         "@repo/shared": "workspace:*",
@@ -320,6 +321,8 @@
     "@floating-ui/utils": ["@floating-ui/utils@0.2.10", "", {}, "sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ=="],
 
     "@fontsource-variable/roboto": ["@fontsource-variable/roboto@5.2.10", "", {}, "sha512-LJ0iLg6aHbLzN515gyHzmdTqJzd9NlI95cCg1DW0F5G7KkFqRLBBKBbqEJx4nSu4aby3IKmw3ZH6Fe928IfaSQ=="],
+
+    "@hono/event-emitter": ["@hono/event-emitter@2.0.0", "", { "peerDependencies": { "hono": "*" } }, "sha512-7/zg7hfPh9lncYCxU3avk40vGhiqP4D5NvmaNX+8QxXivIkrLckSia5P4Nz6PH+A1T8Aj3yFlONf4AiX5rqaEA=="],
 
     "@hono/node-server": ["@hono/node-server@1.19.9", "", { "peerDependencies": { "hono": "^4" } }, "sha512-vHL6w3ecZsky+8P5MD+eFfaGTyCeOHUIFYMGpQGbrBTSmNNoxv0if69rEZ5giu36weC5saFuznL411gRX7bJDw=="],
 
