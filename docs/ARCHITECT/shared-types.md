@@ -1,8 +1,10 @@
 # Canonical Frontend Type Source
 
+> **2026-05-24:** `packages/shared` folded into `apps/backend/src/shared/`; package deleted. Frontend derives all types from the RPC `AppType` (`@repo/backend`, type-only) and no longer depends on a shared package. The code fold is the next step; this doc records the decided target state. The envelope convention now lives with the backend shared module; the FE side stays types-only (no runtime cross-package import).
+
 ## Overview
 
-The frontend derives ALL backend response and request types from one file, the planned `apps/frontend/src/lib/contracts.ts` (⬜ not yet created). It indexes into the Hono RPC `AppType` (via the `ApiClient` type from `apps/frontend/src/lib/api-client.ts:ApiClient`) using `InferResponseType` / `InferRequestType`, so no component ever hand-writes or re-derives a backend type. To make this clean, every backend typed JSON success response uses a uniform `{ data: T }` envelope (the `@repo/shared` `packages/shared/src/types.ts:ApiResponse` / `packages/shared/src/types.ts:PaginatedResponse` shapes), so `contracts.ts` can peel `.data` everywhere. This doc owns the `@repo/shared` substrate, the DTO/derivation rules, and the envelope convention.
+The frontend derives ALL backend response and request types from one file, `apps/frontend/src/lib/contracts.ts` (✅ created, `bb38424`). It indexes into the Hono RPC `AppType` (via the `ApiClient` type from `apps/frontend/src/lib/api-client.ts:ApiClient`) using `InferResponseType` / `InferRequestType`, so no component ever hand-writes or re-derives a backend type. To make this clean, every backend typed JSON success response uses a uniform `{ data: T }` envelope (the `ApiResponse<T>` / `PaginatedResponse<T>` shapes in `apps/backend/src/shared/types.ts`), so `contracts.ts` can peel `.data` everywhere. This doc owns the shared envelope substrate, the DTO/derivation rules, and the envelope convention.
 
 ## Architecture Decisions
 
@@ -11,20 +13,24 @@ The frontend derives ALL backend response and request types from one file, the p
 | Single type source | `contracts.ts` derives every response/request type from `AppType`; components import only from `@/lib/contracts` | One place to change, no drift, no hand-written backend types in the UI |
 | Derive, don't duplicate | Use `InferResponseType` / `InferRequestType` from `hono/client` against `apps/frontend/src/lib/api-client.ts:ApiClient` | Types follow the backend automatically with zero codegen |
 | Uniform success envelope | Every typed JSON success response is `{ data: T }`; lists are `{ data: T[], pagination }` | Lets `contracts.ts` peel `.data` the same way for every endpoint |
-| Reuse shared shapes | Envelope uses `packages/shared/src/types.ts:ApiResponse` and `packages/shared/src/types.ts:PaginatedResponse` | These shapes already exist; this gives them a real convention to enforce |
-| Co-locate runtime schemas | Re-export the matching Zod schema from `@repo/shared` in the same entity block | Forms get validation + types from one import |
+| Envelope shapes live in the backend | `2026-05-24:` `ApiResponse<T>` / `PaginatedResponse<T>` now live in `apps/backend/src/shared/types.ts` (folded from the deleted `packages/shared`) | The envelope is a backend-output convention; co-locating it with the routes that produce it removes the standalone package and its dist build |
+| FE has no runtime cross-package dependency | `2026-05-24:` Frontend imports backend types ONLY via the RPC `AppType` from `@repo/backend` (type-only); it takes no runtime import from any backend/shared package | Importing a runtime value from `@repo/backend` risks pulling the worker entry into the FE bundle; type-only imports are erased at build time |
+| No shared runtime home post-fold | `2026-05-24:` After the fold, runtime values genuinely shared by FE + BE have no home. If a future FE form needs a backend Zod schema, reintroduce a SOURCE-ONLY shared package (no dist build) rather than importing runtime from `@repo/backend` | Keeps the fold types-only on the FE side and avoids bundle bloat; a thin source-only package is the sanctioned escape hatch |
 | Components never import `AppType` | Components import named types from `@/lib/contracts` only | Keeps the derivation funnel single and reviewable |
 
 ## Key Files
 
+> **2026-05-24:** `packages/shared` removed from this table — its envelope types fold into `apps/backend/src/shared/types.ts`; the FE has no shared-package row because it depends on backend types only via `@repo/backend` (type-only).
+
 | File | Purpose |
 |------|---------|
-| `apps/frontend/src/lib/contracts.ts` | ⬜ Planned canonical surface (to be created): the single source of derived FE types and the only place `InferResponseType`/`InferRequestType` is used |
+| `apps/frontend/src/lib/contracts.ts` | ✅ Canonical surface: the single source of derived FE types and the only place `InferResponseType`/`InferRequestType` is used |
 | `apps/frontend/src/lib/api-client.ts:createApiClient` | Wraps `hc<AppType>` in `createApiClient(accessToken?)`; exports `apps/frontend/src/lib/api-client.ts:ApiClient` — the bridge type `contracts.ts` indexes into |
 | `apps/backend/src/app.ts:buildApp` | Chains routers and exports `apps/backend/src/app.ts:AppType` (`= ReturnType<typeof buildApp>`) |
-| `apps/backend/src/index.ts` | Re-exports `AppType` (`apps/backend/src/index.ts:7`) for the `@repo/backend` entry |
+| `apps/backend/src/index.ts` | Re-exports `AppType` (`apps/backend/src/index.ts:7`) for the `@repo/backend` entry — the FE's only cross-package handle, consumed type-only |
 | `apps/backend/package.json` | Points `main`/`types` at `./src/index.ts` (`apps/backend/package.json:6`–`apps/backend/package.json:7`) so FE resolves `AppType` from TS source, no build step |
-| `packages/shared/src/types.ts:ApiResponse` | The single (`{ data: T }`) and list (`packages/shared/src/types.ts:PaginatedResponse`, `{ data: T[], pagination }`) envelope shapes contracts conform to |
+| `apps/backend/src/shared/types.ts` | `2026-05-24:` New home for the envelope shapes (`ApiResponse<T>` single, `PaginatedResponse<T>` list) once `packages/shared` is folded in |
+| `apps/backend/src/shared/schemas.ts:paginationSchema` | Backend RESPONSE-side pagination metadata schema (`{ page, limit, total, pages }`) — consumed by `apps/backend/src/features/logs/schemas.ts`. NOTE the name collision with the deleted `packages/shared` REQUEST-side `paginationSchema` (`{ page, limit }`); only this backend one is real code |
 | `apps/backend/src/features/health/routes.ts` | Reference enveloped endpoints — `healthCheckSchema` and `indexResponseSchema` both wrap `{ data }` |
 | `apps/backend/src/features/logs/schemas.ts:logsByPathResponseSchema` | Reference enveloped list response (`{ data: T[], pagination }`); `getLogByIdRoute` wraps `{ data: logDetailResponseSchema }` |
 
@@ -75,7 +81,7 @@ export type ThingDetail = NonNullable<ThingDetailResponse>
 | Single detail | `<Entity>Detail` | derived from the detail endpoint's `.data` |
 | Create input | `Create<Entity>Input` | `InferRequestType<E>['json']` |
 
-Runtime Zod schemas are re-exported from `@repo/shared` in the same entity block so a form gets both validation and types from one import.
+`2026-05-24:` Runtime Zod schemas are NOT shared with the FE after the fold. `@repo/shared` is gone and the FE must not take a runtime import from `@repo/backend` (bundle-bloat risk — see [§ Architecture Decisions](#architecture-decisions)). If a future FE form genuinely needs a backend Zod schema for client-side validation, reintroduce a SOURCE-ONLY shared package (no dist build) and import the schema from there; do not import a runtime value from `@repo/backend`. The request-side `{ page, limit }` `paginationSchema` that `packages/shared` exported is dead code today (only re-exported speculatively by `contracts.ts`, not consumed by any handler or form), so it is dropped in the fold rather than carried over.
 
 ## Security Considerations
 
@@ -89,7 +95,8 @@ Runtime Zod schemas are re-exported from `@repo/shared` in the same entity block
 - Do NOT hand-write or inline a backend response type in a component. Derive it in `contracts.ts` and import it.
 - Do NOT add an endpoint that returns an un-enveloped typed JSON response. Every success response MUST be `{ data: T }` (single) or `{ data: T[], pagination }` (list). (Static-asset/HTML routes via `Response`/`c.text` are exempt.)
 - Do NOT bypass `contracts.ts` by importing `AppType` (or `ApiClient`) directly into a component to derive types ad hoc.
-- Do NOT reach into `@repo/shared` for response types in components — `@repo/shared` provides envelope shapes and runtime schemas only; derived response types come from `contracts.ts`.
+- `2026-05-24:` Do NOT add a runtime import from `@repo/backend` (or any backend module) into the frontend. The FE consumes `@repo/backend` type-only (the RPC `AppType`); a runtime import risks pulling the worker entry into the FE bundle. For a genuinely shared runtime value, reintroduce a source-only shared package — do not reach into the backend package.
+- `2026-05-24:` Do NOT recreate `packages/shared`. Envelope types now live in `apps/backend/src/shared/types.ts`; if you need a runtime value shared across FE+BE, use the source-only-package escape hatch above.
 
 If a change conflicts with any of these (e.g. a new endpoint cannot fit the `{ data: T }` envelope), STOP and ask the user before proceeding.
 
@@ -97,5 +104,7 @@ If a change conflicts with any of these (e.g. a new endpoint cannot fit the `{ d
 
 | Piece | Status | Note |
 |-------|--------|------|
-| `apps/frontend/src/lib/contracts.ts` | ⬜ | Canonical surface not yet created; this doc precedes implementation |
+| `apps/frontend/src/lib/contracts.ts` | ✅ | Canonical surface created (`bb38424`) |
 | Backend `{ data: T }` envelope | ✅ | Health (`apps/backend/src/features/health/routes.ts`) and logs (`apps/backend/src/features/logs/schemas.ts`) responses normalized to the envelope |
+| Fold `packages/shared` → `apps/backend/src/shared/` | ⬜ | Decided `2026-05-24`; envelope types move to `apps/backend/src/shared/types.ts`, package deleted, workspace + `@repo/shared` deps removed from root/`apps/*` `package.json`. Code change is the next step after this doc |
+| Drop request-side `paginationSchema`/`PaginationInput` | ⬜ | Dead code (only re-exported by `contracts.ts:23`–`24`, no consumer). Remove the re-export from `contracts.ts`; do NOT carry it into the backend |
