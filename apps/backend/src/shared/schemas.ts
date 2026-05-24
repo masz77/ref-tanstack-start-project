@@ -18,6 +18,20 @@ export const errorResponseSchema = z
   })
   .openapi("ErrorResponse");
 
+// 2026-05-24: The shape that the app actually serializes on error. The global
+// handler is stoker's `onError` (wired in `create-app.ts` via `app.onError(onError)`),
+// which returns `{ message, stack? }` — NOT the `{ success, error, details }` of
+// `errorResponseSchema` above, and NOT the `{ error, message, timestamp, path }` of
+// the unused `middleware/error-handler.ts`. Documented error responses must use THIS
+// schema so Scalar `/reference` matches the real runtime body. `stack` is omitted in
+// production but present otherwise, hence optional.
+export const httpErrorResponseSchema = z
+  .object({
+    message: z.string(),
+    stack: z.string().optional(),
+  })
+  .openapi("HttpErrorResponse");
+
 export const deleteResponseSchema = z
   .object({
     success: z.boolean(),

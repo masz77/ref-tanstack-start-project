@@ -1,5 +1,25 @@
-import { paginationSchema } from "@/shared/schemas";
+import { httpErrorResponseSchema, paginationSchema } from "@/shared/schemas";
 import { createRoute, z } from "@hono/zod-openapi";
+
+// 2026-05-24: Reusable error-response declarations. Error responses are documented
+// with `httpErrorResponseSchema` content (the real stoker `onError` body) so Scalar
+// `/reference` shows them; the frontend `contracts.ts` status-narrows to the success
+// status, so the `.data` peel stays clean and these doc-only error members never
+// pollute the success body's `InferResponseType`.
+const unauthorizedResponse = {
+  content: { "application/json": { schema: httpErrorResponseSchema } },
+  description: "Invalid or missing x-api-key header",
+} as const;
+
+const notFoundResponse = {
+  content: { "application/json": { schema: httpErrorResponseSchema } },
+  description: "Requested log entry was not found",
+} as const;
+
+const serverErrorResponse = {
+  content: { "application/json": { schema: httpErrorResponseSchema } },
+  description: "Server misconfiguration or unexpected error",
+} as const;
 
 // =============================================================================
 // BASE LOGS SCHEMAS
@@ -100,12 +120,6 @@ export const getLogByIdRoute = createRoute({
       })
       .openapi("LogHeaders"),
   },
-  // 2026-05-24: Only the 200 (success) response is declared here. Error statuses
-  // (401/404/500) are handled by throwing HTTPException -> the global `onError`
-  // serializer, never via a typed `c.json` body. Declaring them as doc-only
-  // (description, no content schema) made the Hono RPC infer an `output: {}` member,
-  // which polluted the un-statused `InferResponseType` union so contracts.ts could no
-  // longer peel `.data`. Keeping the typed success body clean restores `['data']`.
   responses: {
     200: {
       content: {
@@ -115,6 +129,10 @@ export const getLogByIdRoute = createRoute({
       },
       description: "API log details",
     },
+    // 404 only here: the service throws HTTPException(404) when the id is unknown.
+    401: unauthorizedResponse,
+    404: notFoundResponse,
+    500: serverErrorResponse,
   },
 });
 
@@ -152,6 +170,8 @@ export const getLogsByPathRoute = createRoute({
       },
       description: "API logs filtered by path",
     },
+    401: unauthorizedResponse,
+    500: serverErrorResponse,
   },
 });
 
@@ -186,6 +206,8 @@ export const testApiKeyRoute = createRoute({
       },
       description: "API key is valid",
     },
+    401: unauthorizedResponse,
+    500: serverErrorResponse,
   },
 });
 
@@ -236,6 +258,8 @@ export const getRecentLogsRoute = createRoute({
       },
       description: "Recent API logs",
     },
+    401: unauthorizedResponse,
+    500: serverErrorResponse,
   },
 });
 
@@ -283,6 +307,8 @@ export const getLogsStatsForRangeRoute = createRoute({
       },
       description: "API logs statistics for the specified date range",
     },
+    401: unauthorizedResponse,
+    500: serverErrorResponse,
   },
 });
 
@@ -321,6 +347,8 @@ export const getLogsStatsRoute = createRoute({
       },
       description: "API logs statistics",
     },
+    401: unauthorizedResponse,
+    500: serverErrorResponse,
   },
 });
 
@@ -373,6 +401,8 @@ export const getEndpointMetricsRoute = createRoute({
       },
       description: "Endpoint metrics aggregated by path and method",
     },
+    401: unauthorizedResponse,
+    500: serverErrorResponse,
   },
 });
 
@@ -418,5 +448,7 @@ export const cleanupLogsRoute = createRoute({
       },
       description: "Logs cleaned up successfully",
     },
+    401: unauthorizedResponse,
+    500: serverErrorResponse,
   },
 });
