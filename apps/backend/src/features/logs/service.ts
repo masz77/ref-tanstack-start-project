@@ -251,9 +251,19 @@ export function createLogsService(env: DbEnv) {
         })
         .from(apiLogs);
 
+      // 2026-05-24: Coerce Drizzle aggregate outputs (sum/avg/sql MIN/MAX come back as
+      // `string | null` / `unknown`) to the `number` the response schema declares.
+      // This removes pre-existing schema/runtime drift so the typed `{ data }` body
+      // actually matches its contract (and the frontend's derived `number` types).
+      const row = stats[0];
       const result = {
-        ...stats[0],
-        errorRate: stats[0].total ? ((Number(stats[0].errors) / stats[0].total) * 100).toFixed(2) : "0.00",
+        total: row.total,
+        errors: Number(row.errors ?? 0),
+        avgDuration: row.avgDuration === null ? null : Number(row.avgDuration),
+        minDuration: row.minDuration === null ? null : Number(row.minDuration),
+        maxDuration: row.maxDuration === null ? null : Number(row.maxDuration),
+        totalRequests24h: Number(row.totalRequests24h ?? 0),
+        errorRate: row.total ? ((Number(row.errors) / row.total) * 100).toFixed(2) : "0.00",
       };
 
       await cacheService.set(cacheKey, JSON.stringify(result), CACHE_TTL);
@@ -275,9 +285,16 @@ export function createLogsService(env: DbEnv) {
         .from(apiLogs)
         .where(and(gte(apiLogs.createdAt, fromTimestamp), lte(apiLogs.createdAt, toTimestamp)));
 
+      // 2026-05-24: Coerce aggregate outputs to `number` to match the declared schema
+      // (see getLogsStats note). Keeps typed body in sync with its contract.
+      const row = stats[0];
       return {
-        ...stats[0],
-        errorRate: stats[0].total ? ((Number(stats[0].errors) / stats[0].total) * 100).toFixed(2) : "0.00",
+        total: row.total,
+        errors: Number(row.errors ?? 0),
+        avgDuration: row.avgDuration === null ? null : Number(row.avgDuration),
+        minDuration: row.minDuration === null ? null : Number(row.minDuration),
+        maxDuration: row.maxDuration === null ? null : Number(row.maxDuration),
+        errorRate: row.total ? ((Number(row.errors) / row.total) * 100).toFixed(2) : "0.00",
         dateRange: { from: fromDate, to: toDate },
       };
     },
@@ -302,8 +319,16 @@ export function createLogsService(env: DbEnv) {
         .orderBy(desc(count()))
         .limit(limit);
 
+      // 2026-05-24: Coerce aggregate outputs to `number` to match the declared schema
+      // (see getLogsStats note). Keeps typed body in sync with its contract.
       const result = metrics.map((metric) => ({
-        ...metric,
+        path: metric.path,
+        method: metric.method,
+        totalRequests: metric.totalRequests,
+        avgDuration: metric.avgDuration === null ? null : Number(metric.avgDuration),
+        minDuration: metric.minDuration === null ? null : Number(metric.minDuration),
+        maxDuration: metric.maxDuration === null ? null : Number(metric.maxDuration),
+        errorCount: Number(metric.errorCount ?? 0),
         errorRate: metric.totalRequests
           ? ((Number(metric.errorCount) / metric.totalRequests) * 100).toFixed(2)
           : "0.00",

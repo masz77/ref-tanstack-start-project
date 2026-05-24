@@ -100,6 +100,12 @@ export const getLogByIdRoute = createRoute({
       })
       .openapi("LogHeaders"),
   },
+  // 2026-05-24: Only the 200 (success) response is declared here. Error statuses
+  // (401/404/500) are handled by throwing HTTPException -> the global `onError`
+  // serializer, never via a typed `c.json` body. Declaring them as doc-only
+  // (description, no content schema) made the Hono RPC infer an `output: {}` member,
+  // which polluted the un-statused `InferResponseType` union so contracts.ts could no
+  // longer peel `.data`. Keeping the typed success body clean restores `['data']`.
   responses: {
     200: {
       content: {
@@ -108,15 +114,6 @@ export const getLogByIdRoute = createRoute({
         },
       },
       description: "API log details",
-    },
-    404: {
-      description: "Log not found",
-    },
-    401: {
-      description: "Unauthorized - Invalid or missing API key",
-    },
-    500: {
-      description: "Internal server error",
     },
   },
 });
@@ -155,15 +152,6 @@ export const getLogsByPathRoute = createRoute({
       },
       description: "API logs filtered by path",
     },
-    400: {
-      description: "Validation error",
-    },
-    401: {
-      description: "Unauthorized - Invalid or missing API key",
-    },
-    500: {
-      description: "Internal server error",
-    },
   },
 });
 
@@ -197,12 +185,6 @@ export const testApiKeyRoute = createRoute({
         },
       },
       description: "API key is valid",
-    },
-    401: {
-      description: "Unauthorized - Invalid or missing API key",
-    },
-    500: {
-      description: "Internal server error",
     },
   },
 });
@@ -254,12 +236,6 @@ export const getRecentLogsRoute = createRoute({
       },
       description: "Recent API logs",
     },
-    401: {
-      description: "Unauthorized - Invalid or missing API key",
-    },
-    500: {
-      description: "Internal server error",
-    },
   },
 });
 
@@ -307,15 +283,6 @@ export const getLogsStatsForRangeRoute = createRoute({
       },
       description: "API logs statistics for the specified date range",
     },
-    400: {
-      description: "Validation error - Invalid date format",
-    },
-    401: {
-      description: "Unauthorized - Invalid or missing API key",
-    },
-    500: {
-      description: "Internal server error",
-    },
   },
 });
 
@@ -353,12 +320,6 @@ export const getLogsStatsRoute = createRoute({
         },
       },
       description: "API logs statistics",
-    },
-    401: {
-      description: "Unauthorized - Invalid or missing API key",
-    },
-    500: {
-      description: "Internal server error",
     },
   },
 });
@@ -412,12 +373,6 @@ export const getEndpointMetricsRoute = createRoute({
       },
       description: "Endpoint metrics aggregated by path and method",
     },
-    401: {
-      description: "Unauthorized - Invalid or missing API key",
-    },
-    500: {
-      description: "Internal server error",
-    },
   },
 });
 
@@ -462,15 +417,6 @@ export const cleanupLogsRoute = createRoute({
         },
       },
       description: "Logs cleaned up successfully",
-    },
-    400: {
-      description: "Validation error",
-    },
-    401: {
-      description: "Unauthorized - Invalid or missing API key",
-    },
-    500: {
-      description: "Internal server error",
     },
   },
 });

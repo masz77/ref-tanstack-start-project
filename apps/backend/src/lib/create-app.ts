@@ -22,7 +22,11 @@ import { apiLoggingMiddleware } from "@/middleware/api-logger";
 
 import type { AppBindings, AppOpenAPI } from "@/shared/types";
 
-export function createRouter(): OpenAPIHono<AppBindings> {
+// 2026-05-24: Removed the `: OpenAPIHono<AppBindings>` return annotation. Annotating
+// the return type pins the `Schema` generic to its default `{}`, so when callers chain
+// `.openapi(...)`/`.get(...)` the accumulated route schemas can't widen the type — RPC
+// inference (`hc<AppType>`) needs that widened Schema to flow through. Let it infer.
+export function createRouter() {
   return new OpenAPIHono<AppBindings>({
     strict: false,
     defaultHook,
@@ -77,7 +81,10 @@ function createDynamicCorsMiddleware(): MiddlewareHandler<AppBindings> {
   };
 }
 
-export default function createApp(): OpenAPIHono<AppBindings> {
+// 2026-05-24: No return annotation here either — keep the inferred Schema so the
+// router chain in app.ts (`createApp().route(...).route(...)`) accumulates real route
+// types into AppType instead of collapsing to `{}`.
+export default function createApp() {
   // Create emitter with registered listeners
   const emitter = createEmitter<AppEvents>();
 
