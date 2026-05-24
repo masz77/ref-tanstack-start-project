@@ -1,28 +1,28 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
+import { createApiClient } from '@/lib/api-client'
+import type { HealthResponse } from '@/lib/contracts'
 
 export const Route = createFileRoute('/health-demo')({
   component: HealthDemoPage,
 })
 
-type HealthStatus = {
-  status: string
-  timestamp: string
-  uptime: number
-  version: string
-} | null
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8787'
-
 function HealthDemoPage() {
-  const [health, setHealth] = useState<HealthStatus>(null)
+  const [health, setHealth] = useState<HealthResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`${BACKEND_URL}/health`)
-      .then((res: Response) => res.json() as Promise<HealthStatus>)
-      .then((data: HealthStatus) => {
+    const api = createApiClient()
+
+    api.health
+      .$get()
+      .then(async (res) => {
+        // Non-2xx → error state (never empty), per api-response-handling rule
+        if (!res.ok) {
+          throw new Error(`Backend returned ${res.status}`)
+        }
+        const { data } = await res.json()
         setHealth(data)
         setLoading(false)
       })
