@@ -1,6 +1,6 @@
 # Canonical Frontend Type Source
 
-> **2026-05-24:** `packages/shared` folded into `apps/backend/src/shared/`; package deleted. Frontend derives all types from the RPC `AppType` (`@repo/backend`, type-only) and no longer depends on a shared package. The code fold is the next step; this doc records the decided target state. The envelope convention now lives with the backend shared module; the FE side stays types-only (no runtime cross-package import).
+> **2026-05-24:** `packages/shared` folded into `apps/backend/src/shared/`; package deleted (shipped `86c975b`). Frontend derives all types from the RPC `AppType` (`@repo/backend`, type-only) and no longer depends on a shared package. The envelope convention now lives with the backend shared module; the FE side stays types-only (no runtime cross-package import).
 
 ## Overview
 
@@ -29,7 +29,7 @@ The frontend derives ALL backend response and request types from one file, `apps
 | `apps/backend/src/app.ts:buildApp` | Chains routers and exports `apps/backend/src/app.ts:AppType` (`= ReturnType<typeof buildApp>`) |
 | `apps/backend/src/index.ts` | Re-exports `AppType` (`apps/backend/src/index.ts:7`) for the `@repo/backend` entry — the FE's only cross-package handle, consumed type-only |
 | `apps/backend/package.json` | Points `main`/`types` at `./src/index.ts` (`apps/backend/package.json:6`–`apps/backend/package.json:7`) so FE resolves `AppType` from TS source, no build step |
-| `apps/backend/src/shared/types.ts` | `2026-05-24:` New home for the envelope shapes (`ApiResponse<T>` single, `PaginatedResponse<T>` list) once `packages/shared` is folded in |
+| `apps/backend/src/shared/types.ts` | `2026-05-24:` Home for the envelope shapes (`ApiResponse<T>` single, `PaginatedResponse<T>` list), folded in from the deleted `packages/shared` (`86c975b`) |
 | `apps/backend/src/shared/schemas.ts:paginationSchema` | Backend RESPONSE-side pagination metadata schema (`{ page, limit, total, pages }`) — consumed by `apps/backend/src/features/logs/schemas.ts`. NOTE the name collision with the deleted `packages/shared` REQUEST-side `paginationSchema` (`{ page, limit }`); only this backend one is real code |
 | `apps/backend/src/features/health/routes.ts` | Reference enveloped endpoints — `healthCheckSchema` and `indexResponseSchema` both wrap `{ data }` |
 | `apps/backend/src/features/logs/schemas.ts:logsByPathResponseSchema` | Reference enveloped list response (`{ data: T[], pagination }`); `getLogByIdRoute` wraps `{ data: logDetailResponseSchema }` |
@@ -81,7 +81,7 @@ export type ThingDetail = NonNullable<ThingDetailResponse>
 | Single detail | `<Entity>Detail` | derived from the detail endpoint's `.data` |
 | Create input | `Create<Entity>Input` | `InferRequestType<E>['json']` |
 
-`2026-05-24:` Runtime Zod schemas are NOT shared with the FE after the fold. `@repo/shared` is gone and the FE must not take a runtime import from `@repo/backend` (bundle-bloat risk — see [§ Architecture Decisions](#architecture-decisions)). If a future FE form genuinely needs a backend Zod schema for client-side validation, reintroduce a SOURCE-ONLY shared package (no dist build) and import the schema from there; do not import a runtime value from `@repo/backend`. The request-side `{ page, limit }` `paginationSchema` that `packages/shared` exported is dead code today (only re-exported speculatively by `contracts.ts`, not consumed by any handler or form), so it is dropped in the fold rather than carried over.
+`2026-05-24:` Runtime Zod schemas are NOT shared with the FE after the fold. `@repo/shared` is gone and the FE must not take a runtime import from `@repo/backend` (bundle-bloat risk — see [§ Architecture Decisions](#architecture-decisions)). If a future FE form genuinely needs a backend Zod schema for client-side validation, reintroduce a SOURCE-ONLY shared package (no dist build) and import the schema from there; do not import a runtime value from `@repo/backend`. The request-side `{ page, limit }` `paginationSchema` that `packages/shared` exported was dead code (only re-exported speculatively by `contracts.ts`, not consumed by any handler or form), so it was dropped in the fold (`86c975b`) rather than carried over.
 
 ## Security Considerations
 
@@ -106,5 +106,5 @@ If a change conflicts with any of these (e.g. a new endpoint cannot fit the `{ d
 |-------|--------|------|
 | `apps/frontend/src/lib/contracts.ts` | ✅ | Canonical surface created (`bb38424`) |
 | Backend `{ data: T }` envelope | ✅ | Health (`apps/backend/src/features/health/routes.ts`) and logs (`apps/backend/src/features/logs/schemas.ts`) responses normalized to the envelope |
-| Fold `packages/shared` → `apps/backend/src/shared/` | ⬜ | Decided `2026-05-24`; envelope types move to `apps/backend/src/shared/types.ts`, package deleted, workspace + `@repo/shared` deps removed from root/`apps/*` `package.json`. Code change is the next step after this doc |
-| Drop request-side `paginationSchema`/`PaginationInput` | ⬜ | Dead code (only re-exported by `contracts.ts:23`–`24`, no consumer). Remove the re-export from `contracts.ts`; do NOT carry it into the backend |
+| ~~Fold `packages/shared` → `apps/backend/src/shared/`~~ | ✅ | Shipped `86c975b`. Envelope types moved to `apps/backend/src/shared/types.ts`, package deleted, workspace + `@repo/shared` deps removed from root/`apps/*` `package.json` |
+| ~~Drop request-side `paginationSchema`/`PaginationInput`~~ | ✅ | Shipped `86c975b`. Dead re-export removed from `contracts.ts`; not carried into the backend |
