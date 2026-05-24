@@ -9,19 +9,14 @@
  * Rules:
  * - Components import named types from `@/lib/contracts` only.
  * - Components NEVER re-derive backend types inline, never index `AppType`/`ApiClient`
- *   directly, and never reach into `@repo/shared` for response types (`@repo/shared`
- *   provides envelope shapes + runtime schemas only).
+ *   directly, and never reach into the backend internals for response types — every
+ *   type below is derived from the Hono RPC `AppType` and peels the `{ data: T }` envelope.
  *
  * See `docs/ARCHITECT/shared-types.md` for the full rationale.
  */
 
 import type { InferRequestType, InferResponseType } from 'hono/client'
 import type { ApiClient } from '@/lib/api-client'
-
-// Re-export the runtime pagination schema (used by the paginated logs endpoint).
-// Request types for logs come from `InferRequestType` below, not from `@repo/shared`.
-export { paginationSchema } from '@repo/shared'
-export type { PaginationInput } from '@repo/shared'
 
 // --- Health contract ---
 

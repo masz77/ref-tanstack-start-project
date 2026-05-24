@@ -10,8 +10,8 @@
   "scripts": {
     "dev:fe": "bun run --filter @repo/frontend dev",
     "dev:be": "bun run --filter @repo/backend dev",
-    "build": "bun run --filter @repo/shared build && bun run --filter @repo/frontend build && bun run --filter @repo/backend build",
-    "typecheck": "bun run --filter @repo/shared typecheck && bun run --filter @repo/frontend typecheck && bun run --filter @repo/backend typecheck",
+    "build": "bun run --filter @repo/frontend build && bun run --filter @repo/backend build",
+    "typecheck": "bun run --filter @repo/frontend typecheck && bun run --filter @repo/backend typecheck",
     "lint": "bun run --filter @repo/frontend lint",
     "test": "bun run --filter @repo/backend test"
   },
