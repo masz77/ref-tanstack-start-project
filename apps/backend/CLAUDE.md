@@ -6,52 +6,44 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **white-label starter template** designed to be cloned and customized for new projects deployed on Cloudflare Workers. It includes:
 
-- **Authentication**: Email/password, passkeys, 2FA, anonymous users, admin roles
-- **Multi-tenant Support**: Organization plugin for SaaS applications
-- **Payment Integration**: Stripe subscriptions and webhook handling
-- **Rate Limiting**: Cloudflare Durable Objects for global rate limiting
-- **API Documentation**: Auto-generated OpenAPI specs with type generation
-- **Edge Storage**: Cloudflare KV for caching and sessions
+- **Authentication**: Better Auth with email/password and anonymous-user plugins (a `passkey` table exists in the schema, but the passkey/2FA/admin/organization plugins are not currently wired)
+- **Rate Limiting**: `hono-rate-limiter` with an in-memory per-isolate store (`src/lib/cloudflare-rate-limit-store.ts`)
+- **API Documentation**: Auto-generated OpenAPI specs (Scalar at `/reference`, JSON at `/doc`)
+- **Edge Storage**: Cloudflare KV binding available (optional; commented out in `wrangler.jsonc` until configured)
 - **Database**: Cloudflare D1 (serverless SQLite) with Drizzle ORM and migrations
+
+Stripe scaffolding exists but is NOT wired: a `subscription` table, a `user.stripeCustomerId` column, a placeholder `src/lib/stripe-plans.ts`, and an optional `STRIPE_SECRET_KEY` binding. There is no `stripe` dependency, no Stripe SDK calls, and no webhook handling.
 
 ### Customizing for a New Project
 
 When adapting this template for a new project:
 
-1. **Update Project Name**: Edit `package.json` and `wrangler.toml` - change the `name` field
-2. **Configure Bindings**: Set up D1, KV, and Durable Objects in `wrangler.toml`
-3. **Customize Schema**: Modify `src/db/schema.ts` for your domain models
-4. **Add Routes**: Create new route modules under `src/routes/v1/`
-5. **Update Auth Config**: Adjust `src/lib/auth.ts` for your auth requirements
+1. **Update Project Name**: Edit `package.json` and `wrangler.jsonc` - change the `name` field
+2. **Configure Bindings**: Set up D1, KV, and Queue in `wrangler.jsonc`
+3. **Customize Schema**: Modify `src/infrastructure/db/schema.ts` for your domain models
+4. **Add Routes**: Create new feature modules under `src/features/<feature>/`
+5. **Update Auth Config**: Adjust `src/auth/index.ts` for your auth requirements
 6. **Branding**: Update API metadata in `src/lib/configure-open-api.ts`
 7. **Deploy**: Configure Cloudflare secrets and deploy with `wrangler deploy`
 
 ## Development Commands
 
 ### Core Development
-- `bun run dev` - Start development server with hot reload
-- `bun run dev:node` - Start development server using Node.js with tsx
-- `bun run build` - Build for production (Bun target)
-- `bun run build:node` - Build for Node.js with TypeScript compilation
-- `bun run start` - Start production server (Bun)
-- `bun run start:node` - Start production server (Node.js)
+- `bun run dev` - Start the Wrangler dev server (port 8787)
+- `bun run build` - Type-check the build (`tsc --noEmit`)
+- `bun run typecheck` - Run TypeScript type checking (`tsc --noEmit`)
+- `bun run deploy` - Deploy to Cloudflare with Wrangler
 
 ### Database Operations
-- `bun run db:generate` - Generate database migrations from schema changes
-- `bun run db:migrate` - Run pending database migrations
-- `bun run db:push` - Push schema directly to database (development only)
-- `bun run db:pull` - Pull schema from database
+- `bun run db:generate` - Generate Drizzle migrations from schema changes
+- `bun run db:push` - Push schema directly to the database (development only)
+- `bun run db:pull` - Pull schema from the database
+- `bun run d1:migrate:local` - Apply D1 migrations locally
+- `bun run d1:migrate:remote` - Apply D1 migrations to Cloudflare
 
-### Code Quality
-- `bun run typecheck` - Run TypeScript type checking
-- `bun run lint` - Run Biome linting and formatting checks
-- `bun run lint:fix` - Auto-fix Biome issues
-- `bun run format` - Format code with Biome
-- `bun run test` - Run tests with Vitest
-- `bun run test:node` - Run tests once
-
-### API Development
-- `bun run api:generate-types` - Generate TypeScript types from OpenAPI spec at http://localhost:3001/doc
+### Testing
+- `bun run test` - Run tests with Vitest (single run)
+- `bun run test:watch` - Run tests in watch mode
 
 ## Architecture Overview
 
@@ -59,13 +51,12 @@ When adapting this template for a new project:
 - **Hono.js** - Ultrafast web framework optimized for edge computing
 - **Cloudflare Workers** - Deploy globally on Cloudflare's edge network
 - **Better Auth** - Modern authentication with session management
-  - Supports email/password, passkeys, 2FA, anonymous users, admin roles
-  - Organization plugin for multi-tenant SaaS applications
-- **Stripe** - Payment processing and subscription management
+  - Currently wired with the `anonymous` and `openAPI` plugins (see `src/auth/index.ts`); email/password is configured. The schema also has `passkey`/`account` tables for future plugins.
 - **Cloudflare D1** - Serverless SQLite database at the edge
 - **Drizzle ORM** - Type-safe database operations
-- **Cloudflare KV** - Key-value storage for caching and sessions
-- **Durable Objects** - Stateful coordination for rate limiting
+- **Cloudflare KV** - Key-value storage binding (optional)
+- **Cloudflare Queue** - Async message handling (`src/infrastructure/queue/`), wired via the `queue` handler in `src/index.ts`
+- **`hono-rate-limiter`** - Rate limiting with an in-memory per-isolate store (no Durable Objects)
 - **Zod** - Runtime validation and OpenAPI schema generation
 - **TypeScript** - Full type safety with path aliases (`@/*` maps to `./src/*`)
 
@@ -78,47 +69,40 @@ When adapting this template for a new project:
 
 #### App Factory (`src/lib/create-app.ts`)
 - Hono app factory with pre-configured middleware stack:
-  - Request ID, CORS, favicon, Pino logging, API logging, optional auth
-- Global error handling and 404 responses via Stoker middleware
+  - Request ID, dynamic CORS, auth/emitter setup, rate limiter, emoji favicon, API logging
+- Global error handling and 404 responses via Stoker middleware (`notFound`, `onError`)
 - `createTestApp()` helper for testing scenarios
 
 #### Environment & Configuration
-- Environment validation with Zod schemas
-- Bindings configured in `wrangler.toml`: D1, KV, Durable Objects
+- Bindings typed in `src/env.ts` (`AppEnv`); configured in `wrangler.jsonc`: D1 (`DB`), optional KV, Queue (`EVENTS_QUEUE`), `ASSETS`
 - Secrets in `.dev.vars` for local, Cloudflare secrets for production
-- Required secrets: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `STRIPE_SECRET_KEY`, `LOGS_API_KEY`
+- Secrets/env referenced by the code: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `CORS_ORIGINS` (and optional `CORS_MAX_AGE`), `LOGS_API_KEY`. `STRIPE_SECRET_KEY` is declared as optional but unused (see the Stripe scaffolding note above).
 
 #### Database Layer
-- Schema definitions in `src/db/schema.ts` optimized for D1 (SQLite)
+- Schema definitions in `src/infrastructure/db/schema.ts` optimized for D1 (SQLite)
 - Better Auth tables: `user`, `session`, `account`, `verification`, `passkey`
-- Custom `apiLogs` table for request/response logging
-- `baseEntity` helper for common fields (id, createdAt, updatedAt)
-- Migrations applied via `wrangler d1 migrations apply`
+- Additional tables: `subscription` (Stripe scaffolding, unwired) and `apiLogs` (request/response logging)
+- Migrations applied via `wrangler d1 migrations apply` (`bun run d1:migrate:local` / `d1:migrate:remote`)
 
 #### Authentication System
-- Better Auth configuration in `src/lib/auth.ts` with plugins:
-  - Email/password, passkey, 2FA, anonymous, admin, organization
-- Authentication middleware in `src/middlewares/auth.ts`:
-  - `authMiddleware` - Required authentication
-  - `optionalAuthMiddleware` - Optional authentication (applied globally)
-  - `requireEmailVerified` - Email verification requirement
-- Session management with 7-day expiry and 1-day update intervals
+- Better Auth configuration in `src/auth/index.ts` with the `anonymous` and `openAPI` plugins; email/password enabled
+- Authentication middleware in `src/middleware/auth.ts`
+- Auth routes mounted under `/api/auth/*` (`src/features/auth/routes.ts`)
 
 #### API Documentation
-- OpenAPI 3.1 auto-generation with `@hono/zod-openapi`
+- OpenAPI auto-generation with `@hono/zod-openapi`
 - Configuration in `src/lib/configure-open-api.ts`
-- Documentation available at `/doc` (Swagger) and `/reference` (Scalar)
-- Type generation from OpenAPI spec into `src/types/api.ts`
+- OpenAPI JSON served at `/doc`; interactive reference (Scalar) at `/reference`
 
 #### Route Organization
-- Versioned API structure under `src/routes/v1/`
-- Route modules export routers that get mounted in `src/app.ts`
-- Built-in routes: health check (`/health`), API info (`/`), logs dashboard (`/_logs`)
+- Feature-based structure under `src/features/<feature>/` (`routes.ts` + co-located `schemas.ts`/`service.ts`)
+- Routers are chained in `src/app.ts` (`buildApp`) so their methods carry into `AppType`
+- Built-in routes: API info (`/`), health check (`/health`), logs API (`/v1/logs/*`)
 
 #### Middleware Stack
-- **API Logging** - Request/response logging to database via `apiLoggingMiddleware`
-- **Pino Logger** - Structured logging with configurable levels
-- **Error Handler** - Global error handling with consistent response format
+- **API Logging** - Request/response logging to the `apiLogs` table via `apiLoggingMiddleware`
+- **Rate Limiting** - `hono-rate-limiter` with the in-memory `CloudflareRateLimitStore`
+- **Error Handler** - Global error handling via Stoker `onError` (consistent response format)
 - **Validation** - Request validation using Zod schemas
 
 ### Development Patterns
@@ -133,7 +117,7 @@ When adapting this template for a new project:
 - Import and mount routes in `src/app.ts`
 
 #### Database Schema Changes
-1. Modify `src/db/schema.ts`
+1. Modify `src/infrastructure/db/schema.ts`
 2. Run `bun run db:generate` to create migration
 3. Apply to D1: `wrangler d1 migrations apply your-db-name`
 4. For local dev: `wrangler d1 migrations apply your-db-name --local`
