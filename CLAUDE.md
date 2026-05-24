@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Fitality Clubs monorepo — bun workspaces with a TanStack Start frontend and a Hono Cloudflare Workers backend.
+White-label monorepo template — bun workspaces with a TanStack Start frontend and a Hono Cloudflare Workers backend. Clone and customize for new projects.
 
 ## Commands
 
@@ -13,9 +13,9 @@ Fitality Clubs monorepo — bun workspaces with a TanStack Start frontend and a 
 bun install                              # Install all workspace deps
 bun run dev:fe                           # Start frontend dev server (port 3000)
 bun run dev:be                           # Start backend dev server (port 8787)
-bun run typecheck                        # Type-check all workspaces (shared → frontend → backend)
+bun run typecheck                        # Type-check all workspaces (shared -> frontend -> backend)
 bun run test                             # Run backend tests
-bun run build                            # Build shared → frontend → backend
+bun run build                            # Build shared -> frontend -> backend
 ```
 
 ### Frontend (`apps/frontend`)
@@ -24,7 +24,7 @@ cd apps/frontend
 bun run dev                              # Vite dev server
 bun run build                            # Production build
 bun run build:deploy                     # Build + deploy to Cloudflare Workers
-bun run test                             # vitest
+bun run test                             # vitest run
 bun run lint                             # Biome check
 bun run check                            # Biome check + auto-fix
 ```
@@ -34,8 +34,10 @@ bun run check                            # Biome check + auto-fix
 cd apps/backend
 bun run dev                              # wrangler dev (port 8787)
 bun run test                             # vitest run
+bun run test:watch                       # vitest watch mode
 bun run d1:migrate:local                 # Apply D1 migrations locally
 bun run d1:migrate:remote                # Apply D1 migrations to Cloudflare
+bun run db:generate                      # Generate Drizzle migrations from schema
 bun run deploy                           # wrangler deploy
 ```
 
@@ -51,27 +53,22 @@ bun run build                            # Compile to dist/
 apps/
   frontend/          # TanStack Start (React 19 + TanStack Router + Vite)
                      # Deployed to Cloudflare Workers via @cloudflare/vite-plugin
-                     # wrangler.jsonc name: fitality-clubs
   backend/           # Hono + D1 + better-auth (Cloudflare Workers)
-                     # wrangler.json name: fitality-clubs-api
                      # Port: 8787 (local dev)
 packages/
   shared/            # Compiled TypeScript: ApiResponse<T>, paginationSchema, etc.
 ```
 
-## Tech Stack
-
 ### Frontend
 - **Framework**: TanStack Start (React 19 + TanStack Router + Vite)
 - **Deployment**: Cloudflare Workers (`@cloudflare/vite-plugin`, config in `wrangler.jsonc`)
 - **Routing**: File-based via `src/routes/` — routeTree auto-generated to `src/routeTree.gen.ts` (never edit manually)
-- **Styling**: Tailwind CSS v4 (CSS-first config in `src/styles.css`)
-- **UI Components**: shadcn (base-nova style) with Base UI primitives — `src/components/ui/`
+- **Styling**: Tailwind CSS v4 (CSS-first config in `src/styles.css`, oklch color space)
+- **UI Components**: shadcn (base-nova style) with Base UI primitives (`@base-ui/react`) — `src/components/ui/`
 - **Icons**: `@phosphor-icons/react` exclusively
-- **Linter/Formatter**: Biome (not ESLint/Prettier) — config in `biome.json`
+- **Linter/Formatter**: Biome — no semicolons, single quotes, trailing commas
 - **API Client**: `src/lib/api-client.ts` — typed Hono RPC client via `hc<AppType>`
 - **Auth Client**: `src/lib/auth-client.ts` — better-auth browser client
-- **Package manager**: bun (lockfile: `bun.lock`)
 - **Testing**: Vitest + Testing Library
 
 ### Backend
@@ -83,7 +80,7 @@ packages/
 - **Rate Limiting**: `hono-rate-limiter` with Cloudflare KV store
 - **Logging**: API logger middleware stores to D1 `apiLogs` table
 - **API Docs**: Scalar at `/reference`, OpenAPI JSON at `/doc`
-- **Linter**: ESLint with `@antfu/eslint-config`
+- **Queue**: Cloudflare Queue support with typed message handling (`src/infrastructure/queue/`)
 
 ### Shared
 - **Package**: `@repo/shared` — compiled to `dist/` with `.d.ts` declarations
@@ -95,18 +92,25 @@ packages/
 - **Path aliases**: Use `@/` for all imports (maps to `src/`)
 - **Icons**: `@phosphor-icons/react` only — no lucide, heroicons, etc.
 - **shadcn config**: `components.json` — uses `base-nova` style, Phosphor icons, no RSC
-- **CSS variables**: oklch color space with light/dark theme tokens in `src/styles.css`
-- **Biome rules**: No semicolons, single quotes, trailing commas. `noConsole: warn`, `noExplicitAny: off`
-- **Reference design**: `ref.html` contains the target Fitality Clubs HTML design to replicate
+- **Biome rules**: `noConsole: warn`, `noExplicitAny: off`
 
 ### Backend
 - **Path aliases**: Use `@/` for all imports (maps to `src/`)
 - **Bindings**: Access via `c.env` — never `process.env` in Workers
-- **D1 binding**: `DB` (renamed from template's long binding name)
-- **KV binding**: `KV_BINDING`
+- **Feature-based structure**: `src/features/<feature>/routes.ts` with services, schemas co-located
 - **CORS**: Configured via `CORS_ORIGINS` env var (comma-separated); set in `.dev.vars` locally
 - **Auth routes**: all under `/api/auth/*` (better-auth handles routing)
 - **RPC types**: Routes must be chained in `app.ts` (`app.route().route()`) for `AppType` to carry typed methods
+- **Entry point**: `src/index.ts` exports module worker with `fetch` and `queue` handlers
+
+## Type-Safe RPC Flow
+
+The frontend consumes backend types end-to-end without code generation:
+
+1. Backend chains routes in `apps/backend/src/app.ts` and exports `AppType`
+2. `apps/backend/src/index.ts` re-exports `AppType`
+3. Frontend imports `AppType` from `@repo/backend` (workspace dependency) in `src/lib/api-client.ts`
+4. `hc<AppType>` creates a fully typed client — route paths, request params, and response shapes are all inferred
 
 ## Adding Routes
 
@@ -125,9 +129,10 @@ function MyPage() {
 The route tree regenerates automatically on dev server restart.
 
 ### Backend
-Create feature files in `apps/backend/src/routes/v1/<feature>/`:
-- `<feature>.routes.ts` — route definitions + router assembly
-- `<feature>.controller.ts` — handlers
+Create feature files in `apps/backend/src/features/<feature>/`:
+- `routes.ts` — route definitions + handlers (inline, not separate controllers)
+- `schemas.ts` — Zod validation schemas (optional)
+- `service.ts` — business logic, no HTTP context (optional)
 - Register in `apps/backend/src/app.ts` by chaining: `.route('/', yourNewRouter)`
 
 ## Adding UI Components
@@ -137,3 +142,11 @@ bunx shadcn@latest add <component-name>
 ```
 
 Components use Base UI (`@base-ui/react`) under the hood, not Radix. Check existing components in `src/components/ui/` for patterns.
+
+## Customizing for a New Project
+
+1. Update `name` in root `package.json` and both `wrangler.jsonc` files
+2. Configure D1, KV, and Queue bindings in backend `wrangler.jsonc`
+3. Modify `src/db/schema.ts` for your domain models
+4. Add features under `src/features/` in the backend
+5. Set secrets in `.dev.vars` locally: `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `CORS_ORIGINS`

@@ -1,0 +1,18 @@
+# Build outputs
+dist
+dist-ssr
+.output
+.nitro
+.vinxi
+.tanstack
+.wrangler
+
+# Dependencies
+node_modules
+
+# Local env
+.env.local
+*.local
+
+# OS
+.DS_Store
