@@ -8,26 +8,31 @@ import { apiLogs } from "@/infrastructure/db/schema";
 import { createRouter } from "@/lib/create-app";
 
 // Health check response schema
+// Wrapped in { data } to match the uniform success envelope (see CLAUDE.md / shared-types.md)
 const healthCheckSchema = z
   .object({
-    status: z.string(),
-    timestamp: z.string(),
-    uptime: z.number(),
-    version: z.string(),
+    data: z.object({
+      status: z.string(),
+      timestamp: z.string(),
+      uptime: z.number(),
+      version: z.string(),
+    }),
   })
   .openapi("HealthCheck");
 
 // Index response schema
 const indexResponseSchema = z
   .object({
-    message: z.string(),
-    version: z.string(),
-    documentation: z.string(),
-    endpoints: z.object({
-      health: z.string(),
-      docs: z.string(),
-      reference: z.string(),
-      logs: z.string(),
+    data: z.object({
+      message: z.string(),
+      version: z.string(),
+      documentation: z.string(),
+      endpoints: z.object({
+        health: z.string(),
+        docs: z.string(),
+        reference: z.string(),
+        logs: z.string(),
+      }),
     }),
   })
   .openapi("ApiIndex");
@@ -50,14 +55,16 @@ router.openapi(
   (c) => {
     return c.json(
       {
-        message: "Welcome to Tasks API",
-        version: "1.0.0",
-        documentation: "Visit /reference for API documentation",
-        endpoints: {
-          health: "/health",
-          docs: "/doc",
-          reference: "/reference",
-          logs: "/_logs",
+        data: {
+          message: "Welcome to Tasks API",
+          version: "1.0.0",
+          documentation: "Visit /reference for API documentation",
+          endpoints: {
+            health: "/health",
+            docs: "/doc",
+            reference: "/reference",
+            logs: "/_logs",
+          },
         },
       },
       HttpStatusCodes.OK,
@@ -85,15 +92,19 @@ router.get("/test", async (c) => {
 
     return c.json(
       {
-        message: "Test log inserted",
-        id: logId,
+        data: {
+          message: "Test log inserted",
+          id: logId,
+        },
       },
       HttpStatusCodes.CREATED,
     );
   } catch (error) {
     return c.json(
       {
-        message: "Failed to insert test log",
+        data: {
+          message: "Failed to insert test log",
+        },
       },
       HttpStatusCodes.INTERNAL_SERVER_ERROR,
     );
@@ -116,10 +127,12 @@ router.openapi(
 
     return c.json(
       {
-        status: "healthy",
-        timestamp: new Date().toISOString(),
-        uptime,
-        version: "1.0.0",
+        data: {
+          status: "healthy",
+          timestamp: new Date().toISOString(),
+          uptime,
+          version: "1.0.0",
+        },
       },
       HttpStatusCodes.OK,
     );

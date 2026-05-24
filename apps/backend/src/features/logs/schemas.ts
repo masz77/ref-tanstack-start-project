@@ -104,7 +104,7 @@ export const getLogByIdRoute = createRoute({
     200: {
       content: {
         "application/json": {
-          schema: logDetailResponseSchema,
+          schema: z.object({ data: logDetailResponseSchema }).openapi("LogDetailResponse"),
         },
       },
       description: "API log details",
@@ -187,9 +187,11 @@ export const testApiKeyRoute = createRoute({
         "application/json": {
           schema: z
             .object({
-              success: z.boolean(),
-              message: z.string(),
-              timestamp: z.string(),
+              data: z.object({
+                success: z.boolean(),
+                message: z.string(),
+                timestamp: z.string(),
+              }),
             })
             .openapi("TestApiKeyResponse"),
         },
@@ -235,16 +237,18 @@ export const getRecentLogsRoute = createRoute({
       content: {
         "application/json": {
           schema: z
-            .array(
-              z.object({
-                id: z.string().uuid(),
-                method: z.string(),
-                path: z.string(),
-                statusCode: z.number().optional(),
-                duration: z.number().optional(),
-                createdAt: z.string(),
-              }),
-            )
+            .object({
+              data: z.array(
+                z.object({
+                  id: z.string().uuid(),
+                  method: z.string(),
+                  path: z.string(),
+                  statusCode: z.number().optional(),
+                  duration: z.number().optional(),
+                  createdAt: z.string(),
+                }),
+              ),
+            })
             .openapi("RecentLogsResponse"),
         },
       },
@@ -285,15 +289,17 @@ export const getLogsStatsForRangeRoute = createRoute({
         "application/json": {
           schema: z
             .object({
-              total: z.number(),
-              errors: z.number(),
-              avgDuration: z.number().nullable(),
-              minDuration: z.number().nullable(),
-              maxDuration: z.number().nullable(),
-              errorRate: z.string(),
-              dateRange: z.object({
-                from: z.string(),
-                to: z.string(),
+              data: z.object({
+                total: z.number(),
+                errors: z.number(),
+                avgDuration: z.number().nullable(),
+                minDuration: z.number().nullable(),
+                maxDuration: z.number().nullable(),
+                errorRate: z.string(),
+                dateRange: z.object({
+                  from: z.string(),
+                  to: z.string(),
+                }),
               }),
             })
             .openapi("LogsStatsRangeResponse"),
@@ -333,13 +339,15 @@ export const getLogsStatsRoute = createRoute({
         "application/json": {
           schema: z
             .object({
-              total: z.number(),
-              errors: z.number(),
-              avgDuration: z.number().nullable(),
-              minDuration: z.number().nullable(),
-              maxDuration: z.number().nullable(),
-              totalRequests24h: z.number(),
-              errorRate: z.string(),
+              data: z.object({
+                total: z.number(),
+                errors: z.number(),
+                avgDuration: z.number().nullable(),
+                minDuration: z.number().nullable(),
+                maxDuration: z.number().nullable(),
+                totalRequests24h: z.number(),
+                errorRate: z.string(),
+              }),
             })
             .openapi("LogsStatsResponse"),
         },
@@ -385,18 +393,20 @@ export const getEndpointMetricsRoute = createRoute({
       content: {
         "application/json": {
           schema: z
-            .array(
-              z.object({
-                path: z.string(),
-                method: z.string(),
-                totalRequests: z.number(),
-                avgDuration: z.number().nullable(),
-                minDuration: z.number().nullable(),
-                maxDuration: z.number().nullable(),
-                errorCount: z.number(),
-                errorRate: z.string(),
-              }),
-            )
+            .object({
+              data: z.array(
+                z.object({
+                  path: z.string(),
+                  method: z.string(),
+                  totalRequests: z.number(),
+                  avgDuration: z.number().nullable(),
+                  minDuration: z.number().nullable(),
+                  maxDuration: z.number().nullable(),
+                  errorCount: z.number(),
+                  errorRate: z.string(),
+                }),
+              ),
+            })
             .openapi("EndpointMetricsResponse"),
         },
       },
@@ -441,10 +451,12 @@ export const cleanupLogsRoute = createRoute({
         "application/json": {
           schema: z
             .object({
-              success: z.boolean(),
-              message: z.string(),
-              deletedCount: z.number(),
-              timestamp: z.string(),
+              data: z.object({
+                success: z.boolean(),
+                message: z.string(),
+                deletedCount: z.number(),
+                timestamp: z.string(),
+              }),
             })
             .openapi("CleanupLogsResponse"),
         },

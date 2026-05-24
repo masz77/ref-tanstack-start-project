@@ -143,6 +143,17 @@ When adapting this template for a new project:
 - Access authenticated user via `c.get("user")` in route handlers
 - Use `getCurrentUser(c)` helper for type-safe user access
 
+#### Response Envelope Convention
+Every typed JSON success response MUST be wrapped in a uniform `{ data: T }` envelope (the `@repo/shared` `ApiResponse<T>` / `PaginatedResponse<T>` shapes): a single resource returns `{ data: T }`, a list returns `{ data: T[], pagination }`. This applies to both the Zod response schema and the matching `c.json(...)` return. The frontend's canonical type source `apps/frontend/src/lib/contracts.ts` derives all response types from `AppType` and peels `.data`, so an un-enveloped response breaks the convention. See `docs/ARCHITECT/shared-types.md`.
+
+```ts
+// schema: z.object({ data: <entity schema> })
+// handler:
+return c.json({ data: result }, 200);
+```
+
+(Static-asset/HTML routes served via `Response`/`c.text` are exempt — the convention covers typed JSON only.)
+
 #### Code Quality Rules
 - Biome for linting and formatting (configured in `biome.json`)
 - Style: 2-space indent, double quotes, semicolons always

@@ -54,7 +54,16 @@ export const logsRouter = createRouter()
   .openapi(testApiKeyRoute, (async (c) => {
     try {
       validateApiKey(c);
-      return c.json({ success: true, message: "Connection successful" }, 200);
+      return c.json(
+        {
+          data: {
+            success: true,
+            message: "Connection successful",
+            timestamp: new Date().toISOString(),
+          },
+        },
+        200,
+      );
     } catch (error: any) {
       if (error instanceof HTTPException) {
         throw error;
@@ -69,7 +78,7 @@ export const logsRouter = createRouter()
       const query = c.req.valid("query");
       const logsService = createLogsService(c.env);
       const logs = await logsService.getRecentLogs(query.limit);
-      return c.json(logs, 200);
+      return c.json({ data: logs }, 200);
     } catch (error: any) {
       if (error instanceof HTTPException) {
         throw error;
@@ -83,7 +92,7 @@ export const logsRouter = createRouter()
     try {
       const logsService = createLogsService(c.env);
       const stats = await logsService.getLogsStats();
-      return c.json(stats, 200);
+      return c.json({ data: stats }, 200);
     } catch (error: any) {
       if (error instanceof HTTPException) {
         throw error;
@@ -98,7 +107,7 @@ export const logsRouter = createRouter()
       const query = c.req.valid("query");
       const logsService = createLogsService(c.env);
       const stats = await logsService.getLogsStatsForRange(query.fromDate, query.toDate);
-      return c.json(stats, 200);
+      return c.json({ data: stats }, 200);
     } catch (error: any) {
       if (error instanceof HTTPException) {
         throw error;
@@ -113,7 +122,7 @@ export const logsRouter = createRouter()
       const query = c.req.valid("query");
       const logsService = createLogsService(c.env);
       const metrics = await logsService.getEndpointMetrics(query.limit);
-      return c.json(metrics, 200);
+      return c.json({ data: metrics }, 200);
     } catch (error: any) {
       if (error instanceof HTTPException) {
         throw error;
@@ -128,7 +137,7 @@ export const logsRouter = createRouter()
     try {
       const logsService = createLogsService(c.env);
       const log = await logsService.getLogById(id);
-      return c.json(log, 200);
+      return c.json({ data: log }, 200);
     } catch (error: any) {
       if (error instanceof HTTPException) {
         throw error;
@@ -147,10 +156,12 @@ export const logsRouter = createRouter()
 
       return c.json(
         {
-          success: true,
-          message: `Successfully cleaned up logs older than ${daysToKeep} days`,
-          deletedCount,
-          timestamp: new Date().toISOString(),
+          data: {
+            success: true,
+            message: `Successfully cleaned up logs older than ${daysToKeep} days`,
+            deletedCount,
+            timestamp: new Date().toISOString(),
+          },
         },
         200,
       );
