@@ -13,9 +13,9 @@ White-label monorepo template — bun workspaces with a TanStack Start frontend 
 bun install                              # Install all workspace deps
 bun run dev:fe                           # Start frontend dev server (port 3000)
 bun run dev:be                           # Start backend dev server (port 8787)
-bun run typecheck                        # Type-check all workspaces (shared -> frontend -> backend)
+bun run typecheck                        # Type-check workspaces (frontend -> backend)
 bun run test                             # Run backend tests
-bun run build                            # Build shared -> frontend -> backend
+bun run build                            # Build frontend -> backend
 ```
 
 ### Frontend (`apps/frontend`)
@@ -41,12 +41,6 @@ bun run db:generate                      # Generate Drizzle migrations from sche
 bun run deploy                           # wrangler deploy
 ```
 
-### Shared package (`packages/shared`)
-```bash
-cd packages/shared
-bun run build                            # Compile to dist/
-```
-
 ## Architecture
 
 ```
@@ -55,8 +49,7 @@ apps/
                      # Deployed to Cloudflare Workers via @cloudflare/vite-plugin
   backend/           # Hono + D1 + better-auth (Cloudflare Workers)
                      # Port: 8787 (local dev)
-packages/
-  shared/            # Compiled TypeScript: ApiResponse<T>, paginationSchema, etc.
+                     # Envelope types (ApiResponse<T>, etc.) live in src/shared/types.ts
 ```
 
 ### Frontend
@@ -82,9 +75,9 @@ packages/
 - **API Docs**: Scalar at `/reference`, OpenAPI JSON at `/doc`
 - **Queue**: Cloudflare Queue support with typed message handling (`src/infrastructure/queue/`)
 
-### Shared
-- **Package**: `@repo/shared` — compiled to `dist/` with `.d.ts` declarations
-- **Exports**: `ApiResponse<T>`, `ApiError`, `PaginatedResponse<T>`, `paginationSchema`
+### Shared types
+- The envelope types (`ApiResponse<T>`, `ApiError`, `PaginatedResponse<T>`) live in `apps/backend/src/shared/types.ts` — there is no separate `packages/shared` package.
+- The frontend derives all request/response types from the backend RPC `AppType` (type-only import via `@repo/backend`); it does not import these types directly.
 
 ## Key Conventions
 
