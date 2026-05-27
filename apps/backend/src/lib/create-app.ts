@@ -18,6 +18,7 @@ import {
 } from "@/infrastructure/events/listeners";
 import type { AppEvents } from "@/infrastructure/events/types";
 import { CloudflareRateLimitStore } from "@/lib/cloudflare-rate-limit-store";
+import { resolveCorsOrigins } from "@/lib/resolve-origins";
 import { apiLoggingMiddleware } from "@/middleware/api-logger";
 
 import type { AppBindings, AppOpenAPI } from "@/shared/types";
@@ -31,24 +32,6 @@ export function createRouter() {
     strict: false,
     defaultHook,
   });
-}
-
-function resolveCorsOrigins(env: Record<string, unknown>) {
-  const rawOrigins = (env as any)?.CORS_ORIGINS;
-
-  if (Array.isArray(rawOrigins)) {
-    return rawOrigins.map((origin) => String(origin));
-  }
-
-  if (typeof rawOrigins === "string") {
-    return rawOrigins
-      .split(",")
-      .map((origin) => origin.trim())
-      .filter(Boolean);
-  }
-
-  // Default to common local dev origins when CORS_ORIGINS not configured
-  return ["http://localhost:3000", "http://localhost:5173", "http://localhost:8787"];
 }
 
 function resolveCorsMaxAge(env: Record<string, unknown>) {

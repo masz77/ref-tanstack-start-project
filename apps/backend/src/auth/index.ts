@@ -8,6 +8,7 @@ import { drizzle } from "drizzle-orm/d1";
 import type { Env as DatabaseEnv } from "@/infrastructure/db";
 import * as schema from "@/infrastructure/db/schema";
 import { isProductionEnvironment } from "@/lib/cookie-utils";
+import { resolveCorsOrigins } from "@/lib/resolve-origins";
 
 /**
  * Cloudflare Workers environment bindings for authentication.
@@ -22,6 +23,11 @@ export type CloudflareAuthEnv = DatabaseEnv & {
   BETTER_AUTH_URL?: string;
   /** Secret key used for signing tokens and sessions */
   BETTER_AUTH_SECRET?: string;
+  /**
+   * Allowed origins for CORS — array or comma-separated string. Also drives
+   * better-auth's `trustedOrigins` so the two layers stay in sync.
+   */
+  CORS_ORIGINS?: string | string[];
 };
 
 /**
@@ -53,7 +59,13 @@ export function createAuth(env?: CloudflareAuthEnv, cf?: IncomingRequestCfProper
 
   return betterAuth({
     baseURL: env?.BETTER_AUTH_URL || "http://localhost:8787",
-    trustedOrigins: ["http://localhost:5173", "http://localhost:3000", "http://localhost:8787"],
+    // 2026-05-27: trustedOrigins now derives from CORS_ORIGINS (same source as
+    // the Hono CORS middleware) instead of a hardcoded localhost list. The
+    // hardcoded list rejected the prod FE origin with INVALID_ORIGIN even
+    // though it passed CORS — the two layers must agree. Falls back to local
+    // dev origins when CORS_ORIGINS is unset. This is the CSRF boundary, so
+    // CORS_ORIGINS in prod must list ONLY trusted FE domains, never "*".
+    trustedOrigins: resolveCorsOrigins(env),
     ...withCloudflare(
       {
         autoDetectIpAddress: true,
