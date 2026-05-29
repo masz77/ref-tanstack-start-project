@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { withCloudflare } from "better-auth-cloudflare";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { anonymous, openAPI } from "better-auth/plugins";
+import { passkey } from "@better-auth/passkey";
 import { drizzle } from "drizzle-orm/d1";
 
 import type { Env as DatabaseEnv } from "@/infrastructure/db";
@@ -15,7 +16,9 @@ import { resolveCorsOrigins } from "@/lib/resolve-origins";
  * Includes D1 database for user data and KV namespace for session storage.
  */
 export type CloudflareAuthEnv = DatabaseEnv & {
-  /** D1 database binding for authentication data storage */
+  /** D1 database binding (real wrangler.jsonc binding name) */
+  DB?: D1Database;
+  /** Legacy D1 alias kept for backward compat with older callers */
   DATABASE?: D1Database;
   /** KV namespace binding for session management and caching */
   KV?: KVNamespace;
@@ -28,6 +31,9 @@ export type CloudflareAuthEnv = DatabaseEnv & {
    * better-auth's `trustedOrigins` so the two layers stay in sync.
    */
   CORS_ORIGINS?: string | string[];
+  /** Google OAuth client credentials (set via .dev.vars or wrangler secret) */
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
 };
 
 /**
@@ -47,7 +53,9 @@ export type CloudflareAuthEnv = DatabaseEnv & {
  * @returns Configured Better Auth instance with Cloudflare adapters and enabled plugins
  */
 export function createAuth(env?: CloudflareAuthEnv, cf?: IncomingRequestCfProperties) {
-  const d1Binding = env?.DATABASE ?? env?.data_151f7d9b365f41d783ed0bf4eeef5086;
+  // 2026-05-29: Prefer env.DB (the real wrangler.jsonc binding name); keep
+  // DATABASE and data_<hash> as fallbacks so existing callers still resolve.
+  const d1Binding = env?.DB ?? env?.DATABASE ?? env?.data_151f7d9b365f41d783ed0bf4eeef5086;
 
   const db =
     env && d1Binding
@@ -87,9 +95,52 @@ export function createAuth(env?: CloudflareAuthEnv, cf?: IncomingRequestCfProper
         emailAndPassword: {
           enabled: true,
         },
-        plugins: [anonymous(), openAPI()],
+        // 2026-05-29: Google OAuth. Account rows land in the existing `account`
+        // table. Redirect URI configured in Google Cloud Console must be
+        // `<BETTER_AUTH_URL>/api/auth/callback/google`. If env vars are absent
+        // (e.g. fresh checkout, no .dev.vars yet) we omit the provider entirely
+        // — better-auth would otherwise crash on init.
+        socialProviders: env?.GOOGLE_CLIENT_ID && env?.GOOGLE_CLIENT_SECRET
+          ? {
+              google: {
+                clientId: env.GOOGLE_CLIENT_ID,
+                clientSecret: env.GOOGLE_CLIENT_SECRET,
+              },
+            }
+          : undefined,
+        // 2026-05-29: Sign the session into the cookie itself so cache hits do
+        // ZERO D1 round-trips. better-auth refetches every `maxAge` seconds (or
+        // on sign-out). Trade-off: up to 5min stale window — a revoked session
+        // keeps access until cookie refresh. Shorten if your security model
+        // needs it tighter.
+        session: {
+          cookieCache: {
+            enabled: true,
+            maxAge: 5 * 60,
+          },
+        },
+        plugins: [anonymous(), openAPI(), passkey()],
         rateLimit: {
           enabled: false,
+        },
+        advanced: {
+          // 2026-05-29: Env-aware cookie attributes. The `__Secure-` cookie name
+          // prefix (controlled by `useSecureCookies`) is HARD-rejected by every
+          // major browser when the request scheme is http:// — even for
+          // http://localhost. Keeping it on in dev silently drops session_token
+          // on sign-in, so hard refresh always lands as logged-out.
+          //   • prod (https BETTER_AUTH_URL): __Secure- prefix on + Secure +
+          //     SameSite=None — required for cross-origin FE↔BE on real domains.
+          //   • dev  (http BETTER_AUTH_URL):  no __Secure- prefix; keep Secure
+          //     + SameSite=None because Chrome/Firefox/Safari treat
+          //     http://localhost as a secure context for the Secure attribute
+          //     itself, and SameSite=None is still needed for the FE on :3000
+          //     to send the cookie to the BE on :8787 via fetch.
+          useSecureCookies: (env?.BETTER_AUTH_URL ?? "").startsWith("https://"),
+          defaultCookieAttributes: {
+            sameSite: "none",
+            secure: true,
+          },
         },
       },
     ),

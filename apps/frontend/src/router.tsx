@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 import { createRouter } from '@tanstack/react-router'
 import { NotFound } from '@/components/not-found'
+import type { SessionContextValue } from '@/lib/session-context'
 
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
@@ -22,7 +23,11 @@ export const queryClient = new QueryClient({
 export const getRouter = () => {
   const router = createRouter({
     routeTree,
-    context: { queryClient },
+    // 2026-05-29: `auth` is injected at runtime by AuthSync (router.update)
+    // once SessionProvider resolves. We bootstrap with `undefined!` so
+    // synchronous beforeLoad guards can early-return while `context.auth` is
+    // undefined/loading (SSR + first paint) — see session-context.tsx.
+    context: { queryClient, auth: undefined! as SessionContextValue },
     scrollRestoration: true,
     defaultPreloadStaleTime: 0,
     defaultNotFoundComponent: NotFound,

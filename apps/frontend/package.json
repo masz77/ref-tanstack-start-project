@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.2.0",
+    "@better-auth/passkey": "^1.6.11",
     "@cloudflare/vite-plugin": "^1.25.6",
     "@fontsource-variable/roboto": "^5.2.10",
     "@phosphor-icons/react": "^2.1.10",
@@ -51,7 +52,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
-    "better-auth": "^1.2.8",
+    "better-auth": "^1.6.11",
     "hono": "^4.7.11",
     "jsdom": "^27.0.0",
     "typescript": "^5.7.2",
