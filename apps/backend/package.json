@@ -31,7 +31,7 @@
     "hono": "^4.12.23",
     "hono-rate-limiter": "^0.5.3",
     "stoker": "1.4.3",
-    "zod": "^3.25.51"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250224.0",

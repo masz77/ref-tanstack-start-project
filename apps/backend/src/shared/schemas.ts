@@ -57,7 +57,7 @@ export const paginationSchema = z
 export const bulkUpdateRequestSchema = z
   .object({
     ids: z.array(z.string().uuid()).min(1).max(100),
-    updates: z.record(z.any()),
+    updates: z.record(z.string(), z.any()),
   })
   .openapi("BulkUpdateRequest");
 

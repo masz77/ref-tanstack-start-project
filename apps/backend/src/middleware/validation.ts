@@ -47,7 +47,7 @@ export function validateBody<T>(schema: z.ZodSchema<T>) {
       const result = schema.safeParse(body);
 
       if (!result.success) {
-        const details: ValidationError[] = result.error.errors.map((err) => ({
+        const details: ValidationError[] = result.error.issues.map((err) => ({
           field: err.path.join("."),
           message: err.message,
           code: err.code,
@@ -82,7 +82,7 @@ export function validateQuery<T>(schema: z.ZodSchema<T>) {
     const result = schema.safeParse(query);
 
     if (!result.success) {
-      const details: ValidationError[] = result.error.errors.map((err) => ({
+      const details: ValidationError[] = result.error.issues.map((err) => ({
         field: err.path.join("."),
         message: err.message,
         code: err.code,
@@ -109,7 +109,7 @@ export function validateParams<T>(schema: z.ZodSchema<T>) {
     const result = schema.safeParse(params);
 
     if (!result.success) {
-      const details: ValidationError[] = result.error.errors.map((err) => ({
+      const details: ValidationError[] = result.error.issues.map((err) => ({
         field: err.path.join("."),
         message: err.message,
         code: err.code,
