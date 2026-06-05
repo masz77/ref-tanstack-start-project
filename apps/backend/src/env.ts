@@ -14,7 +14,6 @@ export type AppEnv = {
     DB?: AnyD1Database;
     DATABASE?: AnyD1Database;
     KV?: KVNamespace;
-    LOGS_API_KEY?: string;
     EVENTS_QUEUE?: Queue<unknown>;
     CORS_ORIGINS?: string | string[];
     CORS_MAX_AGE?: number | string;

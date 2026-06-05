@@ -1,10 +1,10 @@
 import { createRoute } from "@hono/zod-openapi";
 import { z } from "@hono/zod-openapi";
+import { sql } from "drizzle-orm";
 import * as HttpStatusCodes from "stoker/http-status-codes";
 import { jsonContent } from "stoker/openapi/helpers";
 
 import db from "@/infrastructure/db";
-import { apiLogs } from "@/infrastructure/db/schema";
 import { createRouter } from "@/lib/create-app";
 
 // Health check response schema
@@ -31,7 +31,6 @@ const indexResponseSchema = z
         health: z.string(),
         docs: z.string(),
         reference: z.string(),
-        logs: z.string(),
       }),
     }),
   })
@@ -46,11 +45,10 @@ const WORKER_START_TIME = Date.now();
 // and `/test` never appeared in AppType and `hc<AppType>` saw empty response bodies.
 // Chaining keeps the accumulated type and is what gets exported.
 //
-// 2026-05-24: The two OpenAPI routes (`/`, `/health`) are chained FIRST, then the raw
-// `.get()` routes (`/test`, `/_logs`, `/_logs/*`). A raw `.get()` returns a plain `Hono`
-// (no `.openapi` method), so calling `.openapi()` after a `.get()` is a type error.
-// These paths don't overlap, so reordering does not change runtime matching; the
-// `/_logs/*` wildcard still follows the `/_logs` exact route.
+// 2026-06-05: The two OpenAPI routes (`/`, `/health`) are chained FIRST, then the raw
+// `.get()` route (`/test`). A raw `.get()` returns a plain `Hono` (no `.openapi` method),
+// so calling `.openapi()` after a `.get()` is a type error. (The `/_logs` dashboard routes
+// were removed with the `_log` DB logging stack — Workers Logs is now the only sink.)
 const router = createRouter()
   .openapi(
     createRoute({
@@ -74,7 +72,6 @@ const router = createRouter()
               health: "/health",
               docs: "/doc",
               reference: "/reference",
-              logs: "/_logs",
             },
           },
         },
@@ -109,98 +106,29 @@ const router = createRouter()
       );
     },
   )
+  // DB liveness probe — confirms the D1 binding answers a trivial query.
   .get("/test", async (c) => {
     try {
       const database = db(c.env);
-      const now = new Date();
-      const logId = crypto.randomUUID();
-
-      await database.insert(apiLogs).values({
-        id: logId,
-        method: "GET",
-        url: "http://localhost/test",
-        path: "/test",
-        statusCode: HttpStatusCodes.OK,
-        responseBody: JSON.stringify({ ok: true }),
-        startTime: now,
-        endTime: now,
-        duration: 0,
-      });
+      await database.run(sql`select 1`);
 
       return c.json(
         {
           data: {
-            message: "Test log inserted",
-            id: logId,
+            message: "Database reachable",
           },
         },
-        HttpStatusCodes.CREATED,
+        HttpStatusCodes.OK,
       );
-    } catch (error) {
+    } catch {
       return c.json(
         {
           data: {
-            message: "Failed to insert test log",
+            message: "Database unreachable",
           },
         },
         HttpStatusCodes.INTERNAL_SERVER_ERROR,
       );
-    }
-  })
-  .get("/_logs", async (c) => {
-    const assets = (c.env as any).ASSETS as
-      | {
-          fetch: (request: Request) => Promise<Response>;
-        }
-      | undefined;
-
-    if (!assets) {
-      return c.text("Logs dashboard not available", 404);
-    }
-
-    const url = new URL(c.req.url);
-    url.pathname = "/_logs/index.html";
-
-    const assetRequest = new Request(url.toString(), {
-      method: "GET",
-      headers: c.req.raw.headers,
-    });
-
-    try {
-      const response = await assets.fetch(assetRequest);
-      return response;
-    } catch (error) {
-      return c.text("Logs dashboard not available", 500);
-    }
-  })
-  .get("/_logs/*", async (c) => {
-    const assets = (c.env as any).ASSETS as
-      | {
-          fetch: (request: Request) => Promise<Response>;
-        }
-      | undefined;
-
-    if (!assets) {
-      return c.text("File not found", 404);
-    }
-
-    const incomingUrl = new URL(c.req.url);
-    const assetPath = incomingUrl.pathname;
-
-    const assetUrl = new URL(assetPath, incomingUrl);
-    const assetRequest = new Request(assetUrl.toString(), {
-      method: c.req.method,
-      headers: c.req.raw.headers,
-    });
-
-    try {
-      const response = await assets.fetch(assetRequest);
-      if (response.status === 404) {
-        return c.text("File not found", 404);
-      }
-      return response;
-    } catch (error) {
-      return c.text("File not found", 404);
     }
   });
 

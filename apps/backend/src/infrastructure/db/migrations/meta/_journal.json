@@ -15,6 +15,13 @@
       "when": 1761144906024,
       "tag": "0001_reflective_switch",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1780633780977,
+      "tag": "0002_drop_log",
+      "breakpoints": true
     }
   ]
 }

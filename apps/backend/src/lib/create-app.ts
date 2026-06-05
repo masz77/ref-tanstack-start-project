@@ -19,7 +19,7 @@ import {
 import type { AppEvents } from "@/infrastructure/events/types";
 import { CloudflareRateLimitStore } from "@/lib/cloudflare-rate-limit-store";
 import { resolveCorsOrigins } from "@/lib/resolve-origins";
-import { apiLoggingMiddleware } from "@/middleware/api-logger";
+import { requestLogMiddleware } from "@/middleware/request-log";
 
 import type { AppBindings, AppOpenAPI } from "@/shared/types";
 
@@ -102,7 +102,9 @@ export default function createApp() {
       }),
     )
     .use(serveEmojiFavicon("📝"))
-    .use(apiLoggingMiddleware());
+    // 2026-06-05: Request logging is now a single structured console.log line per request
+    // (Cloudflare Workers Logs is the only sink). Replaces the old `_log` DB table stack.
+    .use(requestLogMiddleware());
 
   app.notFound(notFound);
   app.onError(onError);

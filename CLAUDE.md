@@ -68,10 +68,10 @@ apps/
 - **Framework**: Hono v4 with `@hono/zod-openapi`
 - **Auth**: better-auth + better-auth-cloudflare (D1 + KV session store)
 - **Database**: Cloudflare D1 (SQLite) via Drizzle ORM
-- **Schema**: `src/db/schema.ts` — user, session, account, verification, passkey, apiLogs
+- **Schema**: `src/db/schema.ts` — user, session, account, verification, passkey
 - **Migrations**: `src/db/migrations/` — run via `wrangler d1 migrations apply`
 - **Rate Limiting**: `hono-rate-limiter` with Cloudflare KV store
-- **Logging**: API logger middleware stores to D1 `apiLogs` table
+- **Logging**: **Cloudflare Workers Logs** only — `requestLogMiddleware` emits one structured `console.log` per request; no DB log table. See `docs/ARCHITECT/observability-logging.md`.
 - **API Docs**: Scalar at `/reference`, OpenAPI JSON at `/doc`
 - **Queue**: Cloudflare Queue support with typed message handling (`src/infrastructure/queue/`)
 

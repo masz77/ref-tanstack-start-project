@@ -1,7 +1,6 @@
 import type { Env } from "@/infrastructure/db";
 import type { MessageBatch } from "@cloudflare/workers-types";
 import { handleEmailSend } from "./handlers/email";
-import { handleLogsCleanup } from "./handlers/logs";
 import { handleStripeSync } from "./handlers/stripe";
 import { handleWebhookProcess } from "./handlers/webhook";
 import type { QueueMessage } from "./types";
@@ -29,9 +28,6 @@ async function processMessage(message: QueueMessage, env: Env): Promise<void> {
       break;
     case "webhook:process":
       await handleWebhookProcess(message, env);
-      break;
-    case "logs:cleanup":
-      await handleLogsCleanup(message, env);
       break;
     default: {
       // Type-safe exhaustive check

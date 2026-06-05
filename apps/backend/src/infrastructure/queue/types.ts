@@ -25,15 +25,8 @@ export type WebhookProcessMessage = {
   correlationId: string;
 };
 
-// Logs Cleanup Messages
-export type LogsCleanupMessage = {
-  type: "logs:cleanup";
-  olderThanDays: number;
-  correlationId: string;
-};
-
 // Discriminated union of all queue messages
-export type QueueMessage = EmailSendMessage | StripeSyncMessage | WebhookProcessMessage | LogsCleanupMessage;
+export type QueueMessage = EmailSendMessage | StripeSyncMessage | WebhookProcessMessage;
 
 // Helper type for message by type
 export type QueueMessageByType<T extends QueueMessage["type"]> = Extract<QueueMessage, { type: T }>;

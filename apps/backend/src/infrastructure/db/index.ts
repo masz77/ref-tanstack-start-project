@@ -6,7 +6,7 @@ import * as schema from "./schema";
 
 export type Env = Pick<
   AppEnv["Bindings"],
-  "data_151f7d9b365f41d783ed0bf4eeef5086" | "DATABASE" | "KV" | "LOGS_API_KEY" | "EVENTS_QUEUE"
+  "data_151f7d9b365f41d783ed0bf4eeef5086" | "DATABASE" | "KV" | "EVENTS_QUEUE"
 >;
 
 type DatabaseInstance = DrizzleD1Database<typeof schema>;
