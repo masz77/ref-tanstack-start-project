@@ -19,7 +19,12 @@
   //   }
   // ],
   "observability": {
-    "enabled": true
+    "enabled": true,
+    // 2026-07-02: enable native Workers tracing (open beta) — auto-instruments D1/KV/Queue/fetch.
+    // why: OTel-compliant spans with zero code changes; note: billed on all plans since 2026-03-01
+    "traces": {
+      "enabled": true
+    }
   },
   "placement": {
     "mode": "smart"

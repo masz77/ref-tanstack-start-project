@@ -3,7 +3,12 @@
   "name": "fitality-clubs",
   "compatibility_date": "2025-09-27",
   "observability": {
-    "enabled": true
+    "enabled": true,
+    // 2026-07-02: traces on here too — context propagates across Worker-to-Worker subrequests,
+    // why: frontend SSR → backend API → D1 renders as ONE unified trace instead of two
+    "traces": {
+      "enabled": true
+    }
   },
   "main": "@tanstack/react-start/server-entry",
   "compatibility_flags": [
