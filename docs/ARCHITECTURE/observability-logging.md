@@ -29,6 +29,8 @@ There is **no database log sink.** The starter's `apiLogs` D1 table + `apiLoggin
 | No bodies / no PII | Log **metadata only** — never request/response bodies, headers, cookies, or tokens | Removes the redaction burden and the PII/secret exposure surface entirely. |
 | Skip noisy paths | `requestLogMiddleware` skips `/health`, `/doc`, `/reference`, `/favicon.ico` and `OPTIONS` | Keeps the stream signal-rich; Cloudflare already records the raw invocation. |
 | Retention | Accept Workers Logs retention: **3 days (Free) / 7 days (Workers Paid)**, fixed | Enough for live debugging. For longer history add Logpush → a warehouse (below). |
+| Traces | **Native Workers tracing** (`observability.traces.enabled: true` in both `wrangler.jsonc` files), open beta | Auto-instruments every I/O (D1, KV, Queue, fetch) with zero code; OTel-compliant; trace context propagates across Worker-to-Worker subrequests so frontend SSR → backend → D1 is one trace. No collector/Tempo/S3 to run. Billed since 2026-03-01. |
+| Metrics | **Derived from structured log fields** (`durationMs`, `status`, `path`) via the Observability query builder, plus built-in Workers metrics (invocations, errors, CPU time) | No Prometheus/metrics pipeline. Indexed JSON fields already answer p50/p99-by-path and error-rate questions. Add Analytics Engine (`writeDataPoint`) only if business metrics are needed. |
 
 ## What was removed
 
@@ -105,6 +107,12 @@ REST, same backend as the dashboard tab (all **POST**):
   transport is deprecated).
 - Tools: `query_worker_observability`, `observability_keys`, `observability_values`.
 - Docs: https://developers.cloudflare.com/agents/model-context-protocol/mcp-servers-for-cloudflare/
+
+### Traces — Dashboard → your Worker → Observability → Traces
+Enabled via `observability.traces.enabled: true` (open beta). Spans for every I/O
+(D1 queries, KV, Queue sends, `fetch` subrequests) are captured automatically — no SDK,
+no collector. OTel-compliant, so an OTLP export to Grafana Cloud/Honeycomb is possible later.
+Docs: https://developers.cloudflare.com/workers/observability/traces/
 
 ### Long retention / SQL — Logpush (optional, not wired)
 Dataset `workers_trace_events` includes `console.log` output (delivered as **unstructured**
