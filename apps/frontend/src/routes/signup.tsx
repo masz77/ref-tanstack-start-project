@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/password-input'
 import { passkey, signIn, signUp } from '@/lib/auth-client'
+import { cacheHeaders } from '@/lib/cache-policy'
 import { useFinalizeSession } from '@/lib/hooks/use-finalize-session'
 
 // Best-effort passkey enrollment. Swallows + reports its own failure so the
@@ -26,6 +27,7 @@ async function enrollPasskey(name: string) {
 
 export const Route = createFileRoute('/signup')({
   component: SignupPage,
+  headers: cacheHeaders,
   beforeLoad: ({ context }) => {
     if (!context.auth || context.auth.isLoading) return
     if (context.auth.user) {

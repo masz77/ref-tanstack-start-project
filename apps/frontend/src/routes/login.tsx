@@ -7,10 +7,12 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/password-input'
 import { signIn } from '@/lib/auth-client'
+import { cacheHeaders } from '@/lib/cache-policy'
 import { useFinalizeSession } from '@/lib/hooks/use-finalize-session'
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
+  headers: cacheHeaders,
   // Synchronous guard reads injected `context.auth` (no blocking SSR fetch).
   // Already-signed-in users land on /. While auth is unresolved we
   // early-return so the login page paints immediately (AuthSync re-runs this

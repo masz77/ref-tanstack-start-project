@@ -2,6 +2,14 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "fitality-clubs",
   "compatibility_date": "2025-09-27",
+  // why: turns on Workers Cache so the CF edge caches per the standard
+  // Cache-Control we emit; off-CF this block is simply ignored (portable).
+  // Precondition is Wrangler >= 4.69.0, NOT a minimum compatibility_date.
+  // 2026-07-08: reverted the earlier 2026-05-01 compat bump — verified Workers
+  // Cache has no compat-date floor, so the bump was unnecessary.
+  "cache": {
+    "enabled": true
+  },
   "observability": {
     "enabled": true,
     // 2026-07-02: traces on here too — context propagates across Worker-to-Worker subrequests,
