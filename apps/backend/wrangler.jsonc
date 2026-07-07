@@ -1,9 +1,17 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  // why: Workers Cache's real precondition is Wrangler >= 4.69.0, NOT a newer
+  // compatibility_date — CF docs confirm no minimum date for the feature.
+  // 2026-07-08: reverted compatibility_date 2026-05-01 -> 2025-10-08; the compat bump
+  // was unnecessary (the Wrangler version is the actual gate).
   "compatibility_date": "2025-10-08",
   "main": "src/index.ts",
   "name": "fitality-clubs-api",
   "upload_source_maps": true,
+  // why: enables Workers Cache — reads the standard Cache-Control headers we emit, no code coupling.
+  "cache": {
+    "enabled": true
+  },
   "d1_databases": [
     {
       "binding": "DB",

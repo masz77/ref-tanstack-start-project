@@ -17,6 +17,7 @@ import {
   onUserDeleted,
 } from "@/infrastructure/events/listeners";
 import type { AppEvents } from "@/infrastructure/events/types";
+import { cacheControlMiddleware } from "@/lib/cache-control";
 import { CloudflareRateLimitStore } from "@/lib/cloudflare-rate-limit-store";
 import { resolveCorsOrigins } from "@/lib/resolve-origins";
 import { requestLogMiddleware } from "@/middleware/request-log";
@@ -79,6 +80,9 @@ export default function createApp() {
 
   const app = createRouter();
   app
+    // 2026-07-08: registered cacheControlMiddleware (outermost) — why: stamps after every
+    // route incl. /api/auth/*; see docs/ARCHITECTURE/response-caching.md
+    .use(cacheControlMiddleware())
     .use(requestId())
     .use(createDynamicCorsMiddleware())
     .use("*", async (c, next) => {
