@@ -17,6 +17,12 @@ There is **no database log sink.** The starter's `apiLogs` D1 table + `apiLoggin
 > query than Workers Logs, which exposes a first-party telemetry API + MCP server. Workers Logs
 > is lighter, DB-independent, and agent-queryable.
 
+> **Caveat — cached responses never log.** "One line per request" holds only for requests the
+> Worker runs. With response caching on, a Cloudflare edge cache HIT never invokes the Worker,
+> so cached paths (`/`, `/doc`, `/reference`, and the public FE pages) produce no request log —
+> read edge/cache analytics for those. See
+> [Response Caching § Security Considerations](./response-caching.md#security-considerations).
+
 ## Architecture Decisions
 
 | Decision | Choice | Rationale |
