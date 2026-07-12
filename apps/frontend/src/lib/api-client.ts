@@ -6,10 +6,13 @@ import { hc } from 'hono/client'
 // 2026-05-29: Strip trailing slash(es). A trailing slash in VITE_BACKEND_URL
 // (e.g. "https://your-api.workers.dev/") makes the Hono RPC client build
 // "//api/session", which the deployed Worker router 404s on.
-const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL ?? 'http://localhost:8787').replace(
-  /\/+$/,
-  '',
-)
+// 2026-07-13: localhost fallback is now dev-only. A prod build without
+// VITE_BACKEND_URL used to inline localhost:8787 — the deployed site then
+// fetched it on load, triggering Chrome's Local Network Access permission
+// prompt. Prod now falls back to same-origin ('' base → 404, fails quietly).
+const BACKEND_URL = (
+  import.meta.env.VITE_BACKEND_URL ?? (import.meta.env.DEV ? 'http://localhost:8787' : '')
+).replace(/\/+$/, '')
 
 // 2026-05-29: Forward the incoming Cookie header on SSR. TanStack Start runs
 // route `loader` / `beforeLoad` server-side during a hard refresh; server-side
