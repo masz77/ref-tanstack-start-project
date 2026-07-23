@@ -12,17 +12,19 @@ import { useFinalizeSession } from '@/lib/hooks/use-finalize-session'
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
-  headers: cacheHeaders,
   // Synchronous guard reads injected `context.auth` (no blocking SSR fetch).
   // Already-signed-in users land on /. While auth is unresolved we
   // early-return so the login page paints immediately (AuthSync re-runs this
   // once auth settles).
+  // why: beforeLoad must precede headers — TanStack Start infers route types in
+  // property order, and placing it after headers breaks context type inference.
   beforeLoad: ({ context }) => {
     if (!context.auth || context.auth.isLoading) return
     if (context.auth.user) {
       throw redirect({ to: '/' })
     }
   },
+  headers: cacheHeaders,
 })
 
 function LoginPage() {

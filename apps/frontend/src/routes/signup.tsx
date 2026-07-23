@@ -27,13 +27,15 @@ async function enrollPasskey(name: string) {
 
 export const Route = createFileRoute('/signup')({
   component: SignupPage,
-  headers: cacheHeaders,
+  // why: beforeLoad must precede headers — TanStack Start infers route types in
+  // property order, and placing it after headers breaks context type inference.
   beforeLoad: ({ context }) => {
     if (!context.auth || context.auth.isLoading) return
     if (context.auth.user) {
       throw redirect({ to: '/' })
     }
   },
+  headers: cacheHeaders,
 })
 
 function SignupPage() {
