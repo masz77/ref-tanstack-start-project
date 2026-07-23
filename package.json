@@ -1,7 +1,6 @@
 {
   "name": "fitality-monorepo",
   "private": true,
-  "packageManager": "bun@1.2.0",
   "type": "module",
   "workspaces": [
     "apps/*",
@@ -13,9 +12,11 @@
     "build": "bun run --filter @repo/frontend build && bun run --filter @repo/backend build",
     "typecheck": "bun run --filter @repo/frontend typecheck && bun run --filter @repo/backend typecheck",
     "lint": "bun run --filter @repo/frontend lint",
-    "test": "bun run --filter @repo/backend test"
+    "test": "bun run --filter @repo/backend test",
+    "doctor": "npx react-doctor@latest"
   },
   "devDependencies": {
+    "react-doctor": "^0.9.0",
     "typescript": "^5.7.2"
   }
 }

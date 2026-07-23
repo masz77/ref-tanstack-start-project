@@ -12,6 +12,7 @@ count.txt
 .vinxi
 todos.json
 .claude
+tmp
 
 
 # monorepo build outputs
