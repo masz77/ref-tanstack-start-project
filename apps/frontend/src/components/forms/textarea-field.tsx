@@ -54,9 +54,7 @@ function TextareaField({
         aria-required={required}
         className={cn(hasError && 'border-destructive', minHeight, textareaClassName)}
       />
-      {hasError && (
-        <p className="text-sm text-destructive">{String(field.state.meta.errors[0])}</p>
-      )}
+      {hasError && <p className="text-sm text-destructive">{String(field.state.meta.errors[0])}</p>}
     </div>
   )
 }

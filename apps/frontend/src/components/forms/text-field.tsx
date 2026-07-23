@@ -1,7 +1,7 @@
 'use client'
 
-import type { AnyFieldApi } from '@tanstack/react-form'
 import { Check, Spinner, X } from '@phosphor-icons/react'
+import type { AnyFieldApi } from '@tanstack/react-form'
 
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -104,9 +104,7 @@ function TextField({
           </>
         )}
       </div>
-      {hasError && (
-        <p className="text-sm text-destructive">{String(field.state.meta.errors[0])}</p>
-      )}
+      {hasError && <p className="text-sm text-destructive">{String(field.state.meta.errors[0])}</p>}
     </div>
   )
 }

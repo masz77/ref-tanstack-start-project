@@ -85,9 +85,7 @@ export function DemoForm() {
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
-                    <FieldError>
-                      {field.state.meta.errors[0]}
-                    </FieldError>
+                    <FieldError>{field.state.meta.errors[0]}</FieldError>
                   )}
                 </Field>
               )}
@@ -115,9 +113,7 @@ export function DemoForm() {
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
-                    <FieldError>
-                      {field.state.meta.errors[0]}
-                    </FieldError>
+                    <FieldError>{field.state.meta.errors[0]}</FieldError>
                   )}
                 </Field>
               )}
@@ -137,7 +133,8 @@ export function DemoForm() {
                         {(value: string | null) =>
                           value
                             ? (roleItems.find((i) => i.value === value)?.label ?? value)
-                            : 'Select a role'}
+                            : 'Select a role'
+                        }
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
@@ -174,9 +171,7 @@ export function DemoForm() {
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
                   {field.state.meta.isTouched && field.state.meta.errors.length > 0 && (
-                    <FieldError>
-                      {field.state.meta.errors[0]}
-                    </FieldError>
+                    <FieldError>{field.state.meta.errors[0]}</FieldError>
                   )}
                 </Field>
               )}

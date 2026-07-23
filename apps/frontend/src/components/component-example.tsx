@@ -442,9 +442,8 @@ function FormExample() {
                     <SelectTrigger id={roleId}>
                       <SelectValue>
                         {(value: string | null) =>
-                          value
-                            ? (roleItems.find((i) => i.value === value)?.label ?? value)
-                            : null}
+                          value ? (roleItems.find((i) => i.value === value)?.label ?? value) : null
+                        }
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>

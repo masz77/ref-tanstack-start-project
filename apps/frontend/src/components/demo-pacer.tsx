@@ -122,7 +122,10 @@ function BatchedLogger() {
     setProcessedBatches((prev) => [...prev, items])
   }, [])
 
-  const batcher = useBatcher<string, { size: number; executionCount: number; totalItemsProcessed: number }>(handleBatch, { maxSize: 5, wait: 3000 }, (state) => ({
+  const batcher = useBatcher<
+    string,
+    { size: number; executionCount: number; totalItemsProcessed: number }
+  >(handleBatch, { maxSize: 5, wait: 3000 }, (state) => ({
     size: state.size,
     executionCount: state.executionCount,
     totalItemsProcessed: state.totalItemsProcessed,

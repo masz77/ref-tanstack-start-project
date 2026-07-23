@@ -27,30 +27,18 @@ import type { ApiClient } from '@/lib/api-client'
 
 // --- Health contract ---
 
-export type HealthResponse = InferResponseType<
-  ApiClient['health']['$get'],
-  200
->['data']
+export type HealthResponse = InferResponseType<ApiClient['health']['$get'], 200>['data']
 
-export type ApiIndexResponse = InferResponseType<
-  ApiClient['index']['$get'],
-  200
->['data']
+export type ApiIndexResponse = InferResponseType<ApiClient['index']['$get'], 200>['data']
 
 // `/test` returns 201 on success (and a 500 body shape we don't surface).
-export type TestResponse = InferResponseType<
-  ApiClient['test']['$get'],
-  201
->['data']
+export type TestResponse = InferResponseType<ApiClient['test']['$get'], 201>['data']
 
 // --- Logs contract ---
 
 // Paginated list: expose the full response so callers can read `pagination`/`summary`,
 // plus the item shape via `[number]`.
-export type LogsByPathResponse = InferResponseType<
-  ApiClient['v1']['logs']['by-path']['$get'],
-  200
->
+export type LogsByPathResponse = InferResponseType<ApiClient['v1']['logs']['by-path']['$get'], 200>
 export type LogItem = LogsByPathResponse['data'][number]
 
 // Recent logs: `{ data: LogItem[] }`. The item shape differs from `by-path`'s
@@ -80,10 +68,7 @@ export type EndpointMetricsResponse = InferResponseType<
 >['data']
 export type EndpointMetric = EndpointMetricsResponse[number]
 
-export type LogDetail = InferResponseType<
-  ApiClient['v1']['logs'][':id']['$get'],
-  200
->['data']
+export type LogDetail = InferResponseType<ApiClient['v1']['logs'][':id']['$get'], 200>['data']
 
 // cleanup POST returns 200 on success (handler: `c.json(..., 200)`).
 export type CleanupLogsResponse = InferResponseType<
