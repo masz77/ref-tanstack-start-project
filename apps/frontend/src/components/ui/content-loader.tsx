@@ -1,3 +1,5 @@
+// ContentLoader — usage & design notes: ./content-loader.md
+
 import { SpinnerGap } from '@phosphor-icons/react'
 
 function ContentLoader() {

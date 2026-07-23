@@ -1,3 +1,5 @@
+// Label — usage & design notes: ./label.md
+
 import type * as React from 'react'
 
 import { cn } from '@/lib/utils'

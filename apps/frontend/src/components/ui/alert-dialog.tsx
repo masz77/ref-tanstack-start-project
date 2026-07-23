@@ -1,4 +1,4 @@
-'use client'
+// AlertDialog — usage & design notes: ./alert-dialog.md
 
 import { AlertDialog as AlertDialogPrimitive } from '@base-ui/react/alert-dialog'
 import type * as React from 'react'

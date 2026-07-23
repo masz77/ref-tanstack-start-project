@@ -1,14 +1,12 @@
-'use client'
+// Tooltip — usage & design notes: ./tooltip.md
 
-import * as React from 'react'
 import { Tooltip as TooltipPrimitive } from '@base-ui/react/tooltip'
+import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
 function TooltipProvider({ delay = 0, ...props }: TooltipPrimitive.Provider.Props) {
-  return (
-    <TooltipPrimitive.Provider data-slot="tooltip-provider" delay={delay} {...props} />
-  )
+  return <TooltipPrimitive.Provider data-slot="tooltip-provider" delay={delay} {...props} />
 }
 
 function Tooltip({ delay = 0, ...props }: TooltipPrimitive.Root.Props & { delay?: number }) {
@@ -25,9 +23,7 @@ type TooltipTriggerProps = TooltipPrimitive.Trigger.Props & {
 
 function TooltipTrigger({ asChild, children, ...props }: TooltipTriggerProps) {
   if (asChild && React.isValidElement(children)) {
-    return (
-      <TooltipPrimitive.Trigger data-slot="tooltip-trigger" render={children} {...props} />
-    )
+    return <TooltipPrimitive.Trigger data-slot="tooltip-trigger" render={children} {...props} />
   }
   return (
     <TooltipPrimitive.Trigger data-slot="tooltip-trigger" {...props}>

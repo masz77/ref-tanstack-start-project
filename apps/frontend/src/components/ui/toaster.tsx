@@ -1,7 +1,7 @@
-'use client'
+// Toaster — usage & design notes: ./toaster.md
 
-import { useToast } from '@/lib/toast'
 import { Toast } from '@/components/ui/toast'
+import { useToast } from '@/lib/toast'
 
 function Toaster() {
   const { toasts, dismiss } = useToast()

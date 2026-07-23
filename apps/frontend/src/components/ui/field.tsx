@@ -1,4 +1,4 @@
-'use client'
+// Field — usage & design notes: ./field.md
 
 import { cva, type VariantProps } from 'class-variance-authority'
 import { useMemo } from 'react'

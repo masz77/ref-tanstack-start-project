@@ -1,4 +1,4 @@
-'use client'
+// Separator — usage & design notes: ./separator.md
 
 import { Separator as SeparatorPrimitive } from '@base-ui/react/separator'
 

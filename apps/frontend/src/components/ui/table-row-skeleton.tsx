@@ -1,3 +1,5 @@
+// TableRowSkeleton — usage & design notes: ./table-row-skeleton.md
+
 import { Skeleton } from '@/components/ui/skeleton'
 import { TableBody, TableCell, TableRow } from '@/components/ui/table'
 
@@ -13,9 +15,11 @@ function TableRowSkeleton({ columns, rows = 5, hiddenColumns }: TableRowSkeleton
   return (
     <TableBody>
       {Array.from({ length: rows }, (_, rowIndex) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholder — rows never reorder or change identity
         <TableRow key={rowIndex}>
           {Array.from({ length: columns }, (_, colIndex) => (
             <TableCell
+              // biome-ignore lint/suspicious/noArrayIndexKey: static loading placeholder — cells never reorder
               key={colIndex}
               className={hiddenColumns?.includes(colIndex) ? 'hidden sm:table-cell' : undefined}
             >

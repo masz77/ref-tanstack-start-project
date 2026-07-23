@@ -1,3 +1,5 @@
+// EmptyState — usage & design notes: ./empty-state.md
+
 import type { ComponentType, ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'

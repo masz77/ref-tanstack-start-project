@@ -1,9 +1,9 @@
-'use client'
+// Drawer — usage & design notes: ./drawer.md
 
 // Project drawer: shadcn base-nova drawer (Vaul-based). Chosen over a custom Base UI build for
 // drag-to-dismiss + being the canonical shadcn component; see ./drawer.md.
 // Source: https://ui.shadcn.com/r/styles/base-nova/drawer.json — unchanged except the cn import path.
-import * as React from 'react'
+import type * as React from 'react'
 import { Drawer as DrawerPrimitive } from 'vaul'
 import { cn } from '@/lib/utils'
 
@@ -23,7 +23,10 @@ function DrawerClose({ ...props }: React.ComponentProps<typeof DrawerPrimitive.C
   return <DrawerPrimitive.Close data-slot="drawer-close" {...props} />
 }
 
-function DrawerOverlay({ className, ...props }: React.ComponentProps<typeof DrawerPrimitive.Overlay>) {
+function DrawerOverlay({
+  className,
+  ...props
+}: React.ComponentProps<typeof DrawerPrimitive.Overlay>) {
   return (
     <DrawerPrimitive.Overlay
       data-slot="drawer-overlay"

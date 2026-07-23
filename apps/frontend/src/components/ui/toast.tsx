@@ -1,7 +1,8 @@
-import { CheckCircle, Info, Warning, X } from '@phosphor-icons/react'
+// Toast — usage & design notes: ./toast.md
 
-import { cn } from '@/lib/utils'
+import { CheckCircle, Info, Warning, X } from '@phosphor-icons/react'
 import type { Toast as ToastData, ToastType } from '@/lib/toast'
+import { cn } from '@/lib/utils'
 
 const icons: Record<ToastType, React.ElementType> = {
   success: CheckCircle,
@@ -34,10 +35,7 @@ function Toast({ toast, onDismiss }: ToastProps) {
         'animate-in slide-in-from-right-full fade-in duration-300',
       )}
     >
-      <Icon
-        weight="regular"
-        className={cn('size-5 shrink-0 mt-0.5', iconColors[toast.type])}
-      />
+      <Icon weight="regular" className={cn('size-5 shrink-0 mt-0.5', iconColors[toast.type])} />
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-card-foreground">{toast.title}</p>
         {toast.description && (
@@ -46,6 +44,7 @@ function Toast({ toast, onDismiss }: ToastProps) {
       </div>
       <button
         type="button"
+        aria-label="Dismiss notification"
         onClick={() => onDismiss(toast.id)}
         className="shrink-0 rounded-md p-1 text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >

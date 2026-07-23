@@ -1,4 +1,4 @@
-'use client'
+// Dialog — usage & design notes: ./dialog.md
 
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog'
 import type * as React from 'react'

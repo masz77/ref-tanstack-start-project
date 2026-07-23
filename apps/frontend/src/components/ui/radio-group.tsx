@@ -1,4 +1,4 @@
-'use client'
+// RadioGroup — usage & design notes: ./radio-group.md
 
 import { Radio } from '@base-ui/react/radio'
 import { RadioGroup as RadioGroupPrimitive } from '@base-ui/react/radio-group'

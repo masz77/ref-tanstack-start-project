@@ -1,3 +1,5 @@
+// InputGroup — usage & design notes: ./input-group.md
+
 import { cva, type VariantProps } from 'class-variance-authority'
 import type * as React from 'react'
 import { Button } from '@/components/ui/button'

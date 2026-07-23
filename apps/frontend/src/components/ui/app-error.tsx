@@ -1,3 +1,5 @@
+// AppError — usage & design notes: ./app-error.md
+
 import { ArrowCounterClockwise, WarningCircle } from '@phosphor-icons/react'
 import { Button } from '@/components/ui/button'
 
@@ -6,10 +8,7 @@ type AppErrorProps = {
   onRetry?: () => void
 }
 
-function AppError({
-  message = 'Something went wrong. Please try again.',
-  onRetry,
-}: AppErrorProps) {
+function AppError({ message = 'Something went wrong. Please try again.', onRetry }: AppErrorProps) {
   return (
     <div
       data-slot="app-error"
