@@ -33,7 +33,6 @@ import {
 import * as React from 'react'
 import { DemoForm } from '@/components/demo-form'
 import { DemoPacer } from '@/components/demo-pacer'
-import { DemoTable } from '@/components/demo-table'
 import { DemoVirtual } from '@/components/demo-virtual'
 import { Example, ExampleWrapper } from '@/components/example'
 import {
@@ -106,9 +105,6 @@ export function ComponentExample() {
       </Example>
       <Example title="TanStack Pacer" containerClassName="md:col-span-2">
         <DemoPacer />
-      </Example>
-      <Example title="TanStack Table" containerClassName="md:col-span-2">
-        <DemoTable />
       </Example>
       <Example title="TanStack Virtual" containerClassName="md:col-span-2">
         <DemoVirtual />
