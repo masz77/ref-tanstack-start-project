@@ -2,22 +2,45 @@ import { defineConfig } from 'vite-plus'
 
 export default defineConfig({
   fmt: {
-    ignorePatterns: ['**/*.gen.ts', '**/*.md', '**/migrations/**', '**/dist/**', '**/.wrangler/**', '**/.output/**'],
+    ignorePatterns: [
+      '**/*.gen.ts',
+      '**/*.md',
+      '**/migrations/**',
+      '**/dist/**',
+      '**/.wrangler/**',
+      '**/.output/**',
+      '**/public/**',
+      '**/*.css',
+    ],
     printWidth: 100,
     semi: false,
     singleQuote: true,
     trailingComma: 'all',
-    sortImports: {},
+    // why: matches Biome organizeImports, which kept import groups without blank lines.
+    sortImports: { newlinesBetween: false },
     overrides: [
       {
         // Backend kept its own style (former apps/backend/biome.json).
         files: ['apps/backend/**'],
         options: { printWidth: 120, semi: true, singleQuote: false },
       },
+      {
+        // why: keeps JSON/JSONC as Biome left it; wrangler.jsonc is also read by non-JSONC tools.
+        files: ['**/*.json', '**/*.jsonc'],
+        options: { trailingComma: 'none' },
+      },
     ],
   },
   lint: {
-    ignorePatterns: ['**/*.gen.ts', '**/migrations/**', '**/dist/**', '**/.wrangler/**', '**/.output/**'],
+    ignorePatterns: [
+      '**/*.gen.ts',
+      '**/migrations/**',
+      '**/dist/**',
+      '**/.wrangler/**',
+      '**/.output/**',
+      '**/public/**',
+      '**/*.css',
+    ],
     jsPlugins: [{ name: 'vite-plus', specifier: 'vite-plus/oxlint-plugin' }],
     plugins: ['typescript', 'unicorn', 'oxc', 'import'],
     rules: {

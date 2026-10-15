@@ -1,6 +1,5 @@
 import type { OpenAPIHono, RouteConfig, RouteHandler } from "@hono/zod-openapi";
 import type { Schema } from "hono";
-
 import type { AppEnv } from "@/env";
 
 export type AppBindings = AppEnv;

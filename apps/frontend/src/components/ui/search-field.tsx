@@ -2,7 +2,6 @@
 
 import { MagnifyingGlassIcon, XIcon } from '@phosphor-icons/react'
 import * as React from 'react'
-
 import {
   DropdownMenu,
   DropdownMenuContent,

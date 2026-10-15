@@ -56,11 +56,7 @@ describe("resolveCorsOrigins", () => {
       CORS_ORIGINS: "https://example.com,https://app.example.com,https://admin.example.com",
     };
     const result = resolveCorsOrigins(env);
-    expect(result).toEqual([
-      "https://example.com",
-      "https://app.example.com",
-      "https://admin.example.com",
-    ]);
+    expect(result).toEqual(["https://example.com", "https://app.example.com", "https://admin.example.com"]);
   });
 
   it("should trim whitespace from string origins", () => {
@@ -68,11 +64,7 @@ describe("resolveCorsOrigins", () => {
       CORS_ORIGINS: " https://example.com , https://app.example.com , https://admin.example.com ",
     };
     const result = resolveCorsOrigins(env);
-    expect(result).toEqual([
-      "https://example.com",
-      "https://app.example.com",
-      "https://admin.example.com",
-    ]);
+    expect(result).toEqual(["https://example.com", "https://app.example.com", "https://admin.example.com"]);
   });
 
   it("should filter out empty strings from comma-separated list", () => {

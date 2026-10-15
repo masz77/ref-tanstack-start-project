@@ -1,14 +1,12 @@
 import type { IncomingRequestCfProperties } from "@cloudflare/workers-types";
-import type { MiddlewareHandler, Schema } from "hono";
-
 import { createEmitter } from "@hono/event-emitter";
 import { OpenAPIHono } from "@hono/zod-openapi";
+import type { MiddlewareHandler, Schema } from "hono";
 import { rateLimiter } from "hono-rate-limiter";
 import { cors } from "hono/cors";
 import { requestId } from "hono/request-id";
 import { notFound, onError, serveEmojiFavicon } from "stoker/middlewares";
 import { defaultHook } from "stoker/openapi";
-
 import { createAuth } from "@/auth";
 import {
   onAuthSessionCreated,
@@ -21,7 +19,6 @@ import { cacheControlMiddleware } from "@/lib/cache-control";
 import { CloudflareRateLimitStore } from "@/lib/cloudflare-rate-limit-store";
 import { resolveCorsOrigins } from "@/lib/resolve-origins";
 import { requestLogMiddleware } from "@/middleware/request-log";
-
 import type { AppBindings, AppOpenAPI } from "@/shared/types";
 
 // 2026-05-24: Removed the `: OpenAPIHono<AppBindings>` return annotation. Annotating

@@ -11,9 +11,7 @@ const cfWorkers = import("cloudflare:workers").catch(() => null) as Promise<{
 
 let warnedNoPurge = false;
 
-export async function purgeCacheTags(
-  tags: string[],
-): Promise<{ success: boolean; errors?: unknown }> {
+export async function purgeCacheTags(tags: string[]): Promise<{ success: boolean; errors?: unknown }> {
   try {
     const mod = await cfWorkers;
     if (mod?.cache?.purge) {

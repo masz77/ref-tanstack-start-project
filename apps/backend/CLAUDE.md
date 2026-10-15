@@ -42,7 +42,7 @@ When adapting this template for a new project:
 - `bun run d1:migrate:remote` - Apply D1 migrations to Cloudflare
 
 ### Testing
-- `bun run test` - Run tests with Vitest (single run)
+- `bun run test` - Run tests with Vitest via `vp test run` (single run)
 - `bun run test:watch` - Run tests in watch mode
 
 ## Architecture Overview
@@ -139,7 +139,7 @@ return c.json({ data: result }, 200);
 (Static-asset/HTML routes served via `Response`/`c.text` are exempt — the convention covers typed JSON only.)
 
 #### Code Quality Rules
-- Biome for linting and formatting (configured in `biome.json`)
+- Vite+ (Oxlint + Oxfmt) for linting and formatting, configured in the repo-root `vite.config.ts`
 - Style: 2-space indent, double quotes, semicolons always
 - Kebab-case filenames enforced
 - No `process.env` usage (use `env` from `@/env` instead)

@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { describe, expect, it } from "vite-plus/test";
-
 import { CACHEABLE, cacheControlMiddleware, NO_STORE } from "@/lib/cache-control";
 
 // Unit tests for the toggle and the gating that the integration contract

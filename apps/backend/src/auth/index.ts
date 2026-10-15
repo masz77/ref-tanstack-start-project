@@ -1,11 +1,10 @@
+import { passkey } from "@better-auth/passkey";
 import type { D1Database, IncomingRequestCfProperties, KVNamespace } from "@cloudflare/workers-types";
 import { betterAuth } from "better-auth";
 import { withCloudflare } from "better-auth-cloudflare";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { anonymous, openAPI } from "better-auth/plugins";
-import { passkey } from "@better-auth/passkey";
 import { drizzle } from "drizzle-orm/d1";
-
 import type { Env as DatabaseEnv } from "@/infrastructure/db";
 import * as schema from "@/infrastructure/db/schema";
 import { isProductionEnvironment } from "@/lib/cookie-utils";
@@ -100,14 +99,15 @@ export function createAuth(env?: CloudflareAuthEnv, cf?: IncomingRequestCfProper
         // `<BETTER_AUTH_URL>/api/auth/callback/google`. If env vars are absent
         // (e.g. fresh checkout, no .dev.vars yet) we omit the provider entirely
         // — better-auth would otherwise crash on init.
-        socialProviders: env?.GOOGLE_CLIENT_ID && env?.GOOGLE_CLIENT_SECRET
-          ? {
-              google: {
-                clientId: env.GOOGLE_CLIENT_ID,
-                clientSecret: env.GOOGLE_CLIENT_SECRET,
-              },
-            }
-          : undefined,
+        socialProviders:
+          env?.GOOGLE_CLIENT_ID && env?.GOOGLE_CLIENT_SECRET
+            ? {
+                google: {
+                  clientId: env.GOOGLE_CLIENT_ID,
+                  clientSecret: env.GOOGLE_CLIENT_SECRET,
+                },
+              }
+            : undefined,
         // 2026-05-29: Sign the session into the cookie itself so cache hits do
         // ZERO D1 round-trips. better-auth refetches every `maxAge` seconds (or
         // on sign-out). Trade-off: up to 5min stale window — a revoked session

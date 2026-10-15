@@ -1,7 +1,5 @@
 import { type DrizzleD1Database, drizzle } from "drizzle-orm/d1";
-
 import type { AppEnv } from "@/env";
-
 import * as schema from "./schema";
 
 export type Env = Pick<

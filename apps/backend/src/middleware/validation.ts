@@ -208,11 +208,7 @@ export function validateRateLimit(maxRequests: number, windowMs: number) {
 /**
  * File upload validation
  */
-export function validateFileUpload(options: {
-  maxSize?: number;
-  allowedTypes?: string[];
-  required?: boolean;
-}) {
+export function validateFileUpload(options: { maxSize?: number; allowedTypes?: string[]; required?: boolean }) {
   return async (c: Context, next: Next) => {
     const body = await c.req.parseBody();
     const file = body.file as File;

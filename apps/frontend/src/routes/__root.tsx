@@ -8,7 +8,6 @@ import { NotFound } from '@/components/not-found'
 import { useSessionChannel } from '@/lib/hooks/use-session-channel'
 import { AuthSync, type SessionContextValue, SessionProvider } from '@/lib/session-context'
 import { queryClient } from '@/router'
-
 import appCss from '../styles.css?url'
 
 // 2026-05-29: Context type extended with `auth`. Synchronous beforeLoad guards

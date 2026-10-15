@@ -1,6 +1,5 @@
 import type { KVNamespace, Queue } from "@cloudflare/workers-types";
 import type { AnyD1Database } from "drizzle-orm/d1";
-
 import type { AuthInstance } from "@/auth";
 import type { AppEmitter } from "@/infrastructure/events/types";
 import type { AuthenticatedUser } from "@/middleware/auth";

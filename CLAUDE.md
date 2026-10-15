@@ -11,9 +11,11 @@ White-label monorepo template — bun workspaces with a TanStack Start frontend 
 ### Root
 ```bash
 bun install                              # Install all workspace deps
-bun run dev:fe                           # Start frontend dev server (port 3000)
+bun run dev:fe                           # Start frontend dev server (port 5173)
 bun run dev:be                           # Start backend dev server (port 8787)
 bun run typecheck                        # Type-check workspaces (frontend -> backend)
+bun run lint                             # Oxlint via `vp lint` (whole repo)
+bun run check                            # `vp check`: format + lint + type-aware checks
 bun run test                             # Run backend tests
 bun run build                            # Build frontend -> backend
 ```
@@ -21,20 +23,20 @@ bun run build                            # Build frontend -> backend
 ### Frontend (`apps/frontend`)
 ```bash
 cd apps/frontend
-bun run dev                              # Vite dev server
+bun run dev                              # `vp dev` (Vite+ / Vite 8)
 bun run build                            # Production build
 bun run build:deploy                     # Build + deploy to Cloudflare Workers
-bun run test                             # vitest run
-bun run lint                             # Biome check
-bun run check                            # Biome check + auto-fix
+bun run test                             # `vp test run`
+bun run lint                             # `vp lint`
+bun run check                            # `vp check --fix`
 ```
 
 ### Backend (`apps/backend`)
 ```bash
 cd apps/backend
 bun run dev                              # wrangler dev (port 8787)
-bun run test                             # vitest run
-bun run test:watch                       # vitest watch mode
+bun run test                             # `vp test run` (Vitest bundled in Vite+)
+bun run test:watch                       # `vp test` watch mode
 bun run d1:migrate:local                 # Apply D1 migrations locally
 bun run d1:migrate:remote                # Apply D1 migrations to Cloudflare
 bun run db:generate                      # Generate Drizzle migrations from schema
@@ -59,10 +61,11 @@ apps/
 - **Styling**: Tailwind CSS v4 (CSS-first config in `src/styles.css`, oklch color space)
 - **UI Components**: shadcn (base-nova style) with Base UI primitives (`@base-ui/react`) — `src/components/ui/`
 - **Icons**: `@phosphor-icons/react` exclusively
-- **Linter/Formatter**: Biome — no semicolons, single quotes, trailing commas
+- **Toolchain**: Vite+ (`vite-plus`) — Vite 8, Vitest, Oxlint, Oxfmt; lint/fmt config lives in the root `vite.config.ts`
+- **Formatting**: Oxfmt — frontend: no semicolons, single quotes, trailing commas; backend: double quotes, semicolons (root `fmt.overrides`)
 - **API Client**: `src/lib/api-client.ts` — typed Hono RPC client via `hc<AppType>`
 - **Auth Client**: `src/lib/auth-client.ts` — better-auth browser client
-- **Testing**: Vitest + Testing Library
+- **Testing**: Vitest (via `vite-plus/test`) + Testing Library
 
 ### Backend
 - **Framework**: Hono v4 with `@hono/zod-openapi`
@@ -85,7 +88,7 @@ apps/
 - **Path aliases**: Use `@/` for all imports (maps to `src/`)
 - **Icons**: `@phosphor-icons/react` only — no lucide, heroicons, etc.
 - **shadcn config**: `components.json` — uses `base-nova` style, Phosphor icons, no RSC
-- **Biome rules**: `noConsole: warn`, `noExplicitAny: off`
+- **Lint rules**: `no-console: warn`; React/a11y rules scoped to `apps/frontend/**` in root `vite.config.ts`
 
 ### Backend
 - **Path aliases**: Use `@/` for all imports (maps to `src/`)

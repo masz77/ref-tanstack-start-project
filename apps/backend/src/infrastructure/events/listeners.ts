@@ -1,5 +1,5 @@
-import type { QueueMessage } from "@/infrastructure/queue/types";
 import type { Context, Env } from "hono";
+import type { QueueMessage } from "@/infrastructure/queue/types";
 import type { AuthSessionCreatedEvent, SubscriptionChangedEvent, UserCreatedEvent, UserDeletedEvent } from "./types";
 
 // Type alias for the bindings we need from context

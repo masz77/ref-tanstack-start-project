@@ -2,11 +2,7 @@
  * Common local-dev origins used when `CORS_ORIGINS` is not configured, so a
  * plain `bun run dev` works without setting the binding.
  */
-export const DEFAULT_DEV_ORIGINS = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "http://localhost:8787",
-];
+export const DEFAULT_DEV_ORIGINS = ["http://localhost:3000", "http://localhost:5173", "http://localhost:8787"];
 
 /**
  * Parses the `CORS_ORIGINS` binding into a list of origin strings.

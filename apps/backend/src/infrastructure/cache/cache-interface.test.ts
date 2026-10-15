@@ -1,6 +1,6 @@
-import { type CacheService, createCacheService } from "@/infrastructure/cache";
 import type { KVNamespace } from "@cloudflare/workers-types";
 import { beforeEach, describe, expect, it } from "vite-plus/test";
+import { type CacheService, createCacheService } from "@/infrastructure/cache";
 
 // Mock KVNamespace implementation for testing
 class MockKVNamespace {
@@ -19,9 +19,7 @@ class MockKVNamespace {
   }
 
   async put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void> {
-    const expiresAt = options?.expirationTtl
-      ? Date.now() + options.expirationTtl * 1000
-      : undefined;
+    const expiresAt = options?.expirationTtl ? Date.now() + options.expirationTtl * 1000 : undefined;
     this.store.set(key, { value, expiresAt });
   }
 

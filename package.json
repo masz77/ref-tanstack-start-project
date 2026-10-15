@@ -7,13 +7,14 @@
   ],
   "type": "module",
   "scripts": {
-    "dev:fe": "bun run --filter @repo/frontend dev",
-    "dev:be": "bun run --filter @repo/backend dev",
-    "build": "bun run --filter @repo/frontend build && bun run --filter @repo/backend build",
-    "typecheck": "bun run --filter @repo/frontend typecheck && bun run --filter @repo/backend typecheck",
-    "lint": "bun run --filter @repo/frontend lint",
-    "test": "bun run --filter @repo/backend test",
-    "doctor": "npx react-doctor@latest"
+    "dev:fe": "vp run --filter @repo/frontend dev",
+    "dev:be": "vp run --filter @repo/backend dev",
+    "build": "vp run --filter @repo/frontend build && vp run --filter @repo/backend build",
+    "typecheck": "vp run --filter @repo/frontend typecheck && vp run --filter @repo/backend typecheck",
+    "lint": "vp lint",
+    "test": "vp run --filter @repo/backend test",
+    "doctor": "npx react-doctor@latest",
+    "check": "vp check"
   },
   "devDependencies": {
     "react-doctor": "^0.9.0",

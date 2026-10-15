@@ -3,7 +3,6 @@ import { z } from "@hono/zod-openapi";
 import { sql } from "drizzle-orm";
 import * as HttpStatusCodes from "stoker/http-status-codes";
 import { jsonContent } from "stoker/openapi/helpers";
-
 import db from "@/infrastructure/db";
 import { createRouter } from "@/lib/create-app";
 

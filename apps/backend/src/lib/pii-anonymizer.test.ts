@@ -1,5 +1,5 @@
-import { PiiAnonymizer } from "@/lib/pii-anonymizer";
 import { describe, expect, it } from "vite-plus/test";
+import { PiiAnonymizer } from "@/lib/pii-anonymizer";
 
 describe("PiiAnonymizer", () => {
   describe("anonymizeIpAddress", () => {
@@ -24,15 +24,11 @@ describe("PiiAnonymizer", () => {
 
       expect(PiiAnonymizer.anonymizeIpAddress("fe80::1")).toBe("fe80::xxxx:xxxx:xxxx:xxxx");
 
-      expect(PiiAnonymizer.anonymizeIpAddress("::1")).toBe(
-        "xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx",
-      );
+      expect(PiiAnonymizer.anonymizeIpAddress("::1")).toBe("xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx");
     });
 
     it("should handle multi-segment compressed IPv6 notation", () => {
-      expect(PiiAnonymizer.anonymizeIpAddress("2001:db8:85a3:0000::1")).toBe(
-        "2001:db8:85a3:0000::xxxx:xxxx:xxxx:xxxx",
-      );
+      expect(PiiAnonymizer.anonymizeIpAddress("2001:db8:85a3:0000::1")).toBe("2001:db8:85a3:0000::xxxx:xxxx:xxxx:xxxx");
     });
 
     it("should return 'unknown' unchanged", () => {

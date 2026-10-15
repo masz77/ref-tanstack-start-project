@@ -1,6 +1,5 @@
 import type { Context, Next } from "hono";
 import { HTTPException } from "hono/http-exception";
-
 import type { AuthInstance } from "@/auth";
 
 type SessionResponse = Awaited<ReturnType<AuthInstance["api"]["getSession"]>>;
