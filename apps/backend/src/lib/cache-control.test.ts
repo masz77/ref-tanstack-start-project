@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import { CACHEABLE, cacheControlMiddleware, NO_STORE } from "@/lib/cache-control";
 

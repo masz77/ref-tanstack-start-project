@@ -1,11 +1,11 @@
 {
   "name": "fitality-monorepo",
   "private": true,
-  "type": "module",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
+  "type": "module",
   "scripts": {
     "dev:fe": "bun run --filter @repo/frontend dev",
     "dev:be": "bun run --filter @repo/backend dev",
@@ -17,7 +17,16 @@
   },
   "devDependencies": {
     "react-doctor": "^0.9.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
   },
-  "packageManager": "bun@1.3.6"
+  "overrides": {
+    "vite": "catalog:"
+  },
+  "packageManager": "bun@1.3.6",
+  "catalog": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.2.0",
+    "vite-plus": "1.2.0"
+  }
 }

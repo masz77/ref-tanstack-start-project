@@ -1,5 +1,5 @@
 import { CloudflareRateLimitStore } from "@/lib/cloudflare-rate-limit-store";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vite-plus/test";
 
 describe("CloudflareRateLimitStore", () => {
   let store: CloudflareRateLimitStore;

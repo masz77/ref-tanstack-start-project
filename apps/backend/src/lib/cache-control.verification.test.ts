@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import buildApp from "@/app";
 import { CACHEABLE, NO_STORE } from "@/lib/cache-control";

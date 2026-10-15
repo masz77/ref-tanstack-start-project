@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 /**
  * Test helper that replicates resolveCorsOrigins function logic
@@ -52,15 +52,27 @@ describe("resolveCorsOrigins", () => {
   });
 
   it("should handle string input with multiple comma-separated origins", () => {
-    const env = { CORS_ORIGINS: "https://example.com,https://app.example.com,https://admin.example.com" };
+    const env = {
+      CORS_ORIGINS: "https://example.com,https://app.example.com,https://admin.example.com",
+    };
     const result = resolveCorsOrigins(env);
-    expect(result).toEqual(["https://example.com", "https://app.example.com", "https://admin.example.com"]);
+    expect(result).toEqual([
+      "https://example.com",
+      "https://app.example.com",
+      "https://admin.example.com",
+    ]);
   });
 
   it("should trim whitespace from string origins", () => {
-    const env = { CORS_ORIGINS: " https://example.com , https://app.example.com , https://admin.example.com " };
+    const env = {
+      CORS_ORIGINS: " https://example.com , https://app.example.com , https://admin.example.com ",
+    };
     const result = resolveCorsOrigins(env);
-    expect(result).toEqual(["https://example.com", "https://app.example.com", "https://admin.example.com"]);
+    expect(result).toEqual([
+      "https://example.com",
+      "https://app.example.com",
+      "https://admin.example.com",
+    ]);
   });
 
   it("should filter out empty strings from comma-separated list", () => {

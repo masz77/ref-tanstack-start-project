@@ -1,8 +1,8 @@
 {
   "name": "@repo/backend",
-  "type": "module",
   "version": "0.1.0",
   "license": "MIT",
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
@@ -15,8 +15,8 @@
     "db:pull": "drizzle-kit pull",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "vp test run",
+    "test:watch": "vp test"
   },
   "dependencies": {
     "@better-auth/passkey": "^1.6.11",
@@ -42,7 +42,7 @@
     "tsc-alias": "^1.8.16",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3",
-    "vitest": "^4",
+    "vite-plus": "catalog:",
     "wrangler": "^4.151.0"
   }
 }

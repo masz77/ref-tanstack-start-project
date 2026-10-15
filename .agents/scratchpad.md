@@ -34,3 +34,6 @@
 ## 2026-10-15 — Vite+ migration execution
 - User: "go do it". Branch chore/vite-plus created. Decision: keep per-app formatting via fmt overrides (smallest diff); pnpm-lock.yaml not deleted (no-delete rule) -> add root packageManager=bun instead, rm deferred.
 - Baseline (bun 1.3.6, node 26.7): FE tsc 15 errors (pre-existing); BE tests 7 files/86 pass; BE build (tsc) fails 1 pre-existing error cloudflare-rate-limit-store.ts:24; FE biome check clean (66 files).
+- Step1 done: vitest ^4, wrangler ^4.151, @cloudflare/vite-plugin ^1.64, root packageManager bun@1.3.6. BE 86/86 pass, FE build OK on Vite 7. Committed. Next: vp migrate at root.
+- vp migrate --no-interactive --no-agent --no-editor --no-hooks ran: catalog vite->vite-plus-core 1.2.0, vitest dep removed, 9 test imports -> vite-plus/test, clearMocks:false compat added, root vite.config.ts (fmt:{}, lint typeAware+typeCheck), lazyPlugins wrap FE plugins. Side effect: default oxfmt reformatted touched files (FE vite.config.ts double quotes; BE test lines wrapped at 100). Biome untouched. Next: port biome rules + per-app fmt into root config.
+- @vitejs/plugin-react ^6 (peer vite ^8). BE code uses printWidth 120 (5 lines >120, 26 >100) -> BE fmt override width 120.
