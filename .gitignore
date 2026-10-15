@@ -13,6 +13,7 @@ count.txt
 todos.json
 .claude
 tmp
+.agents
 
 
 # monorepo build outputs
