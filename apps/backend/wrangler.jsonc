@@ -8,6 +8,7 @@
   "main": "src/index.ts",
   "name": "fitality-clubs-api",
   "upload_source_maps": true,
+  "compatibility_flags": ["nodejs_compat"],
   // why: enables Workers Cache — reads the standard Cache-Control headers we emit, no code coupling.
   "cache": {
     "enabled": true
