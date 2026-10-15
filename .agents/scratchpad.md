@@ -22,3 +22,15 @@
 - Removed DemoTable import + <Example title="TanStack Table"> from src/components/component-example.tsx (was lines 36, 110-112). File deletion deferred to user (rm list).
 - Verify: tsc excluding demo-table.tsx (temp config node_modules/.cache/tsconfig.no-demo-table.json) = same 15 pre-existing errors; biome OK; build OK; dev / = 200 with Form/Pacer/Virtual sections, no Table; other routes 200.
 - Blocker: plain `bun run typecheck` shows +17 demo-table.tsx errors until user deletes that file. Browser check still blocked (chrome-devtools-axi pageId bug).
+- 2026-09-26 /commit: user had deleted demo-table.tsx; FE typecheck back to 15 pre-existing errors. Commits: 077b94e (remove table demo), c7688c9 (deps bump, package.json+bun.lock+routeTree bundled), 74130da (remove tmp/ verification artifacts), 4d94bf0 (scratchpad). react-doctor hook warned (index/worktree mismatch) but did not block; `react-doctor --scope changed --base 470c641` = no issues.
+
+## 2026-10-15 — Vite+ migration plan (question only, no code changes)
+- Read root/FE/BE package.json, vite.config.ts, vitest.config.ts, biome/eslint/prettier configs, CI.
+- Next: check current Vite+ docs (vp migrate, monorepo, Bun/Workers support), then answer.
+- 2026-10-15 Findings: vite-plus@1.2.0 bundles Vite core 8.3.4, Vitest 5.0.4, oxlint 1.88, oxfmt 0.73 (npm view). Docs: monorepo migrate must target workspace root; prereq Vite 7+/Vitest 4+; Biome not handled by vp migrate; Husky/lefthook untouched.
+- Repo blockers: bun.lock vitest 3.2.4 (needs 4 first); @cloudflare/vite-plugin 1.25.6 peer vite ^6||^7 (1.64.0 supports ^8, needs wrangler ^4.151); @vitejs/plugin-react 5.1.4 peer <=7 (6.x needs ^8); stray root pnpm-lock.yaml (PM detection risk); BE eslint.config.mjs + biome.json (v1) are dead (deps not installed); BE style double quotes+semis vs FE biome single/no-semi.
+- Decision (proposed): one root migration + root vite.config.ts for lint/fmt/run; FE keeps own vite.config.ts; BE keeps wrangler scripts + test config. No code changed; answer delivered as plan.
+
+## 2026-10-15 — Vite+ migration execution
+- User: "go do it". Branch chore/vite-plus created. Decision: keep per-app formatting via fmt overrides (smallest diff); pnpm-lock.yaml not deleted (no-delete rule) -> add root packageManager=bun instead, rm deferred.
+- Baseline (bun 1.3.6, node 26.7): FE tsc 15 errors (pre-existing); BE tests 7 files/86 pass; BE build (tsc) fails 1 pre-existing error cloudflare-rate-limit-store.ts:24; FE biome check clean (66 files).
