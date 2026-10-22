@@ -10,9 +10,13 @@ export type Env = Pick<
 type DatabaseInstance = DrizzleD1Database<typeof schema>
 
 // 2026-10-22: Prefer env.DB (the wrangler.jsonc binding name); it was missing, so every db() call threw.
-// why: same precedence as createAuth (src/server/auth/index.ts:59-61); DATABASE and data_<hash> stay as fallbacks.
+// why: one resolver for createDb and createAuth; DATABASE and data_<hash> stay as fallbacks.
+export function resolveD1Binding(env: Env) {
+  return env.DB ?? env.DATABASE ?? env.data_151f7d9b365f41d783ed0bf4eeef5086
+}
+
 export function createDb(env: Env): DatabaseInstance {
-  const binding = env.DB ?? env.DATABASE ?? env.data_151f7d9b365f41d783ed0bf4eeef5086
+  const binding = resolveD1Binding(env)
   if (!binding) {
     throw new Error('D1 database binding is not configured.')
   }

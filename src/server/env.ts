@@ -14,8 +14,6 @@ export type AppEnv = {
     DATABASE?: AnyD1Database
     KV?: KVNamespace
     EVENTS_QUEUE?: Queue<unknown>
-    CORS_ORIGINS?: string | string[]
-    CORS_MAX_AGE?: number | string
     BETTER_AUTH_SECRET?: string
     BETTER_AUTH_URL?: string
     // 2026-05-29: Google OAuth client credentials. Set via `.dev.vars` locally

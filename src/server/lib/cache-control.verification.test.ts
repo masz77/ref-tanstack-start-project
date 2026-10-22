@@ -8,9 +8,8 @@ import { CACHEABLE, NO_STORE } from '@/server/lib/cache-control'
 
 // Real env — mirrors production bindings the app reads.
 const TEST_ENV = {
-  CORS_ORIGINS: 'http://localhost:3000',
   BETTER_AUTH_SECRET: 'verification-harness-secret',
-  BETTER_AUTH_URL: 'http://localhost:8787',
+  BETTER_AUTH_URL: 'http://localhost:5173',
 }
 
 // One app for the whole file — these ~11 GETs stay well under the 100/window rate limit.

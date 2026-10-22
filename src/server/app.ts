@@ -1,6 +1,5 @@
 import authRouter from '@/server/features/auth/routes'
 import index from '@/server/features/health/routes'
-import sessionRouter from '@/server/features/session/routes'
 import configureOpenAPI from '@/server/lib/configure-open-api'
 import createApp from '@/server/lib/create-app'
 
@@ -11,7 +10,7 @@ export function buildApp() {
 
   configureOpenAPI(app)
 
-  const routes = app.route('/', authRouter).route('/', sessionRouter).route('/', index)
+  const routes = app.route('/', authRouter).route('/', index)
 
   return routes
 }

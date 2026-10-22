@@ -9,10 +9,9 @@ import { withCloudflare } from 'better-auth-cloudflare'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { anonymous, openAPI } from 'better-auth/plugins'
 import { drizzle } from 'drizzle-orm/d1'
-import type { Env as DatabaseEnv } from '@/server/infrastructure/db'
+import { type Env as DatabaseEnv, resolveD1Binding } from '@/server/infrastructure/db'
 import * as schema from '@/server/infrastructure/db/schema'
 import { isProductionEnvironment } from '@/server/lib/cookie-utils'
-import { resolveCorsOrigins } from '@/server/lib/resolve-origins'
 
 /**
  * Cloudflare Workers environment bindings for authentication.
@@ -25,15 +24,10 @@ export type CloudflareAuthEnv = DatabaseEnv & {
   DATABASE?: D1Database
   /** KV namespace binding for session management and caching */
   KV?: KVNamespace
-  /** Base URL for Better Auth (e.g. https://api.example.com) */
+  /** Public app URL, same origin as the UI (e.g. https://app.example.com) */
   BETTER_AUTH_URL?: string
   /** Secret key used for signing tokens and sessions */
   BETTER_AUTH_SECRET?: string
-  /**
-   * Allowed origins for CORS — array or comma-separated string. Also drives
-   * better-auth's `trustedOrigins` so the two layers stay in sync.
-   */
-  CORS_ORIGINS?: string | string[]
   /** Google OAuth client credentials (set via .dev.vars or wrangler secret) */
   GOOGLE_CLIENT_ID?: string
   GOOGLE_CLIENT_SECRET?: string
@@ -56,9 +50,7 @@ export type CloudflareAuthEnv = DatabaseEnv & {
  * @returns Configured Better Auth instance with Cloudflare adapters and enabled plugins
  */
 export function createAuth(env?: CloudflareAuthEnv, cf?: IncomingRequestCfProperties) {
-  // 2026-05-29: Prefer env.DB (the real wrangler.jsonc binding name); keep
-  // DATABASE and data_<hash> as fallbacks so existing callers still resolve.
-  const d1Binding = env?.DB ?? env?.DATABASE ?? env?.data_151f7d9b365f41d783ed0bf4eeef5086
+  const d1Binding = env && resolveD1Binding(env)
 
   const db =
     env && d1Binding
@@ -69,14 +61,9 @@ export function createAuth(env?: CloudflareAuthEnv, cf?: IncomingRequestCfProper
       : ({} as any)
 
   return betterAuth({
-    baseURL: env?.BETTER_AUTH_URL || 'http://localhost:8787',
-    // 2026-05-27: trustedOrigins now derives from CORS_ORIGINS (same source as
-    // the Hono CORS middleware) instead of a hardcoded localhost list. The
-    // hardcoded list rejected the prod FE origin with INVALID_ORIGIN even
-    // though it passed CORS — the two layers must agree. Falls back to local
-    // dev origins when CORS_ORIGINS is unset. This is the CSRF boundary, so
-    // CORS_ORIGINS in prod must list ONLY trusted FE domains, never "*".
-    trustedOrigins: resolveCorsOrigins(env),
+    // 2026-10-22: trustedOrigins removed; the app is same-origin, so better-auth trusts only this origin.
+    // why: the baseURL origin is the CSRF boundary (node_modules/better-auth/dist/context/helpers.mjs:72-73).
+    baseURL: env?.BETTER_AUTH_URL || 'http://localhost:5173',
     ...withCloudflare(
       {
         autoDetectIpAddress: true,
@@ -128,23 +115,9 @@ export function createAuth(env?: CloudflareAuthEnv, cf?: IncomingRequestCfProper
           enabled: false,
         },
         advanced: {
-          // 2026-05-29: Env-aware cookie attributes. The `__Secure-` cookie name
-          // prefix (controlled by `useSecureCookies`) is HARD-rejected by every
-          // major browser when the request scheme is http:// — even for
-          // http://localhost. Keeping it on in dev silently drops session_token
-          // on sign-in, so hard refresh always lands as logged-out.
-          //   • prod (https BETTER_AUTH_URL): __Secure- prefix on + Secure +
-          //     SameSite=None — required for cross-origin FE↔BE on real domains.
-          //   • dev  (http BETTER_AUTH_URL):  no __Secure- prefix; keep Secure
-          //     + SameSite=None because Chrome/Firefox/Safari treat
-          //     http://localhost as a secure context for the Secure attribute
-          //     itself, and SameSite=None is still needed for the FE on :3000
-          //     to send the cookie to the BE on :8787 via fetch.
+          // 2026-10-22: SameSite=None and the forced Secure flag were removed; cookies use better-auth's defaults (SameSite=Lax).
+          // why: same-origin app, so Lax is enough; `__Secure-` prefix and Secure follow https, since browsers reject Secure cookies over http.
           useSecureCookies: (env?.BETTER_AUTH_URL ?? '').startsWith('https://'),
-          defaultCookieAttributes: {
-            sameSite: 'none',
-            secure: true,
-          },
         },
       },
     ),
@@ -158,6 +131,13 @@ export function createAuth(env?: CloudflareAuthEnv, cf?: IncomingRequestCfProper
           }),
         }),
   })
+}
+
+/**
+ * Builds the per-request auth instance (the Workers `env` bindings plus the request's `cf` data).
+ */
+export function createAuthForRequest(env: CloudflareAuthEnv, request: Request) {
+  return createAuth(env, (request as Request & { cf?: IncomingRequestCfProperties }).cf)
 }
 
 /**
