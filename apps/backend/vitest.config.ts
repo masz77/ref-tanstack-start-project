@@ -1,5 +1,5 @@
-import path from "node:path";
-import { defineConfig } from "vite-plus";
+import path from 'node:path'
+import { defineConfig } from 'vite-plus'
 
 export default defineConfig({
   test: {
@@ -11,7 +11,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      '@': path.resolve(__dirname, './src'),
     },
   },
-});
+})
