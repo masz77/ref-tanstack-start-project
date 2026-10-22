@@ -1,57 +1,49 @@
-import type { MiddlewareHandler } from 'hono'
+import { createMiddleware } from '@tanstack/react-start'
 
-// Paths that are noisy or health/doc-only — skip emitting a request log line for them.
-// 2026-10-22: Hono paths now carry the /api basePath (see src/server/app.ts).
-const SKIP_PATHS = new Set(['/api/health', '/api/doc', '/api/reference', '/favicon.ico'])
+// Health/doc paths are polled or noisy; static assets carry a file extension.
+const SKIP_PATHS = new Set(['/api/health', '/api/doc', '/api/reference'])
+const STATIC_ASSET = /\.[a-z0-9]+$/i
 
-/**
- * Structured request logger. Emits exactly one JSON line per request to stdout so
- * Cloudflare Workers Logs is the only sink — no DB writes, no request/response bodies.
- *
- * why: replaces the old `_log` Postgres/D1 logging stack. Workers Logs captures
- * console output, so a single structured line is enough for request observability.
- */
-export function requestLogMiddleware(): MiddlewareHandler {
-  return async (c, next) => {
-    const method = c.req.method
-    const path = new URL(c.req.url).pathname
+export function shouldLogRequest(method: string, pathname: string): boolean {
+  return method !== 'OPTIONS' && !SKIP_PATHS.has(pathname) && !STATIC_ASSET.test(pathname)
+}
 
-    if (method === 'OPTIONS' || SKIP_PATHS.has(path)) {
-      await next()
-      return
+// why: only these keys are emitted. Bodies, headers, cookies, tokens, emails and IPs stay out of Workers Logs.
+export function emitRequestLog(entry: {
+  method: string
+  path: string
+  status: number
+  durationMs: number
+  requestId?: string
+}) {
+  // why: logging must never break the request, so serialization errors are swallowed.
+  try {
+    // oxlint-disable-next-line no-console -- structured request log; Workers Logs is the sink
+    console.log(JSON.stringify({ type: 'request', ...entry }))
+  } catch {
+    // Intentionally ignore logging failures.
+  }
+}
+
+// why: request middleware runs for pages, server functions and /api routes alike, so one line covers every request.
+export const requestLogMiddleware = createMiddleware().server(
+  async ({ request, pathname, next }) => {
+    if (!shouldLogRequest(request.method, pathname)) {
+      return next()
     }
 
     const start = Date.now()
-    await next()
-    const durationMs = Date.now() - start
+    const result = await next()
 
-    // why: logging must never break the request — swallow any serialization error.
-    try {
-      const requestId = c.get('requestId' as never) as string | undefined
-      const ip = c.req.header('cf-connecting-ip') ?? c.req.header('x-real-ip')
-      const userId = (c.get('user') as { id?: string } | undefined)?.id
+    emitRequestLog({
+      method: request.method,
+      path: pathname,
+      status: result.response.status,
+      durationMs: Date.now() - start,
+      // shortcut: cf-ray is Cloudflare's per-request id, not a Hono requestId, upgrade if log correlation needs an app-generated id
+      requestId: request.headers.get('cf-ray') ?? undefined,
+    })
 
-      const entry: Record<string, unknown> = {
-        type: 'request',
-        method,
-        path,
-        status: c.res.status,
-        durationMs,
-      }
-      if (requestId) {
-        entry.requestId = requestId
-      }
-      if (ip) {
-        entry.ip = ip
-      }
-      if (userId) {
-        entry.userId = userId
-      }
-
-      // oxlint-disable-next-line no-console -- structured request log; Workers Logs is the sink
-      console.log(JSON.stringify(entry))
-    } catch {
-      // Intentionally ignore logging failures.
-    }
-  }
-}
+    return result
+  },
+)

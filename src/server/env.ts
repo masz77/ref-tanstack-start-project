@@ -14,6 +14,8 @@ export type AppEnv = {
     DATABASE?: AnyD1Database
     KV?: KVNamespace
     EVENTS_QUEUE?: Queue<unknown>
+    // why: Cloudflare Rate Limiting binding; only present once the ratelimits block in wrangler.jsonc is enabled.
+    RATE_LIMITER?: { limit(options: { key: string }): Promise<{ success: boolean }> }
     BETTER_AUTH_SECRET?: string
     BETTER_AUTH_URL?: string
     // 2026-05-29: Google OAuth client credentials. Set via `.dev.vars` locally

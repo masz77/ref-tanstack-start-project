@@ -1,9 +1,8 @@
 import { createEmitter } from '@hono/event-emitter'
 import { OpenAPIHono } from '@hono/zod-openapi'
 import type { Schema } from 'hono'
-import { rateLimiter } from 'hono-rate-limiter'
 import { requestId } from 'hono/request-id'
-import { notFound, onError, serveEmojiFavicon } from 'stoker/middlewares'
+import { notFound, onError } from 'stoker/middlewares'
 import { defaultHook } from 'stoker/openapi'
 import { createAuthForRequest } from '@/server/auth'
 import {
@@ -14,8 +13,7 @@ import {
 } from '@/server/infrastructure/events/listeners'
 import type { AppEvents } from '@/server/infrastructure/events/types'
 import { cacheControlMiddleware } from '@/server/lib/cache-control'
-import { CloudflareRateLimitStore } from '@/server/lib/cloudflare-rate-limit-store'
-import { requestLogMiddleware } from '@/server/middleware/request-log'
+import { checkRateLimit, clientKey, RATE_LIMITED_MESSAGE } from '@/server/lib/rate-limit'
 import type { AppBindings, AppOpenAPI } from '@/server/shared/types'
 
 // 2026-05-24: Removed the `: OpenAPIHono<AppBindings>` return annotation. Annotating
@@ -54,23 +52,15 @@ export default function createApp() {
       c.set('emitter', emitter)
       await next()
     })
-    .use(
-      rateLimiter({
-        windowMs: 15 * 60 * 1000, // 15 minutes
-        limit: 100, // limit each IP to 100 requests per windowMs
-        store: new CloudflareRateLimitStore(),
-        keyGenerator: (c) =>
-          c.req.header('cf-connecting-ip') ??
-          c.req.header('x-forwarded-for') ??
-          c.req.header('x-real-ip') ??
-          c.req.raw.headers.get('host') ??
-          'unknown',
-      }),
-    )
-    .use(serveEmojiFavicon('📝'))
-    // 2026-06-05: Request logging is now a single structured console.log line per request
-    // (Cloudflare Workers Logs is the only sink). Replaces the old `_log` DB table stack.
-    .use(requestLogMiddleware())
+    // why: same switch as the TanStack server-function limiter (src/start.ts); off unless RATE_LIMIT_ENABLED is set.
+    .use(async (c, next) => {
+      const { limited } = await checkRateLimit(clientKey(c.req.raw), c.env.RATE_LIMITER)
+      if (limited) {
+        return c.json({ message: RATE_LIMITED_MESSAGE }, 429)
+      }
+
+      await next()
+    })
 
   app.notFound(notFound)
   app.onError(onError)

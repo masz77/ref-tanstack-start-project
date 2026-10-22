@@ -540,3 +540,47 @@ Runtime 5174: signup 200; server fn with jar: token count 0, user present, cache
 - P3 browser (Paseo, dev 5174 run by p3-runner): sign-up via form → redirect /; document.cookie empty (HttpOnly); hard nav /login → bounced to / (session survives refresh, 1 server fn call); POST /api/auth/sign-out 200 → /login stays with form. Sign-in via form NOT checked (step rejected).
 - Codex P3 fix: only __tmpcheck probe. ITEM P3 | status=ACCEPTED.
 ## 2026-10-22 17:21 — p3-runner: P3-RUNNER: stopped, .dev.vars restored
+
+## 2026-10-22 20:55 — orchestrator: P3 committed 7ca0403; P5 + P6 briefed
+- p3-runner stopped 5174, .dev.vars restored to 5173.
+- Commit 7ca0403 (P3). Note: .agents/scratchpad.md is tracked (was committed in earlier history), so it rides along in commits.
+- P5 interpretation (disclose to user): the optional CF rate-limit check also guards Hono /api/* (replaces hono-rate-limiter there); one switch, off by default. requireUser fn middleware skipped (no caller).
+- ITEM P5 | owner=p5-mw | files=see brief-p5-mw.md | status=RUNNING. ITEM P6 | owner=p6-entry | files=src/server.ts, wrangler main | status=RUNNING.
+
+## 2026-10-22 17:24 — p5-mw: start
+- Verified CSRF auto-install off when startInstance exists: node_modules/@tanstack/start-server-core/dist/esm/createStartHandler.js:302 (default csrf at :59).
+- Plan: src/start.ts (request: log + csrf serverFn; function: error contract + rate limit), src/server/lib/rate-limit.ts, src/server/middleware/request-log.ts rewrite, server-fn-errors module, create-app.ts Hono limiter swap, env.ts RATE_LIMITER, wrangler commented ratelimits, remove hono-rate-limiter.
+
+## 2026-10-22 17:30 — p6-entry: P6 REPORT
+- Added src/server.ts: fetch -> serverEntry.fetch + withSecurityHeaders; queue -> handleQueue. Headers always copied (immutable-safe). HSTS only on https.
+- Added src/server.test.ts (3 tests: normal, Response.redirect immutable, http no-HSTS): PASS.
+- wrangler.jsonc: main -> src/server.ts (+ why/dated comment). app.ts: shortcut comment reworded (ctx blocked by src/routes/api/-handler.ts, not owned).
+- Gates: test: my file passes; 3 suites fail on requestLogMiddleware/isRedirect (p5-mw in-progress, not mine). typecheck: no errors in my files. build: OK. wrangler deploy --dry-run: OK, no queue warning.
+- Runtime: wrangler dev 5177 -> / 200 with 4 headers, HSTS absent (http). /api/health 500: create-app.ts:73 requestLogMiddleware not a function (p5-mw area). Stopped my wrangler; port 5177 free.
+- rm list (NOT executed): src/server/index.ts (no importers), src/lib/api-client.ts + src/lib/contracts.ts (only importers are each other/doc comments).
+- Open: /api/health verify pending p5-mw fix; item 4 ctx forwarding needs src/routes/api/-handler.ts change (not owned).
+
+## 2026-10-22 17:31 — p6-entry: P6-ENTRY REPORT (see entry above; same content, requested title)
+- Status: src/server.ts + test + wrangler main DONE. /api/health runtime check BLOCKED by create-app.ts:73 (p5-mw). rm list in entry above.
+
+## 2026-10-22 21:20 — orchestrator: P6 review (partial)
+- Read src/server.ts: fetch → serverEntry.fetch + withSecurityHeaders (copies response; HSTS only https), queue → handleQueue. wrangler main=src/server.ts. Test covers immutable redirect (control). Accept ctx shortcut (TanStack server-route handler gets no ctx; -handler passes request only).
+- Pending: /api/health live check after p5-mw (create-app.ts mid-edit). ITEM P6 | status=RUNNING (waiting on P5 for combined live check).
+- rm list += src/server/index.ts, src/lib/api-client.ts, src/lib/contracts.ts (no importers).
+
+## 2026-10-22 17:40 — p5-mw: P5-MW REPORT
+- Added: src/start.ts (request: requestLog+csrf(serverFn); function: serverFnError+rateLimit), src/server/lib/rate-limit.ts (+test), src/server/middleware/server-fn-error.ts (+test), request-log.ts rewritten (+test).
+- Changed: create-app.ts (Hono limiter swap, serveEmojiFavicon + Hono log removed), env.ts (RATE_LIMITER), app.ts (comment, 2026-10-22), wrangler.jsonc (commented ratelimits only), package.json/bun.lock (hono-rate-limiter removed).
+- Test: 100 pass, 1 fail (app.test.ts hono-rate-limiter header; rm list). Typecheck: store.ts:1 cannot find hono-rate-limiter (rm list); __tmpcheck TS6133 (not mine). Build OK.
+- Dev 5174: /api/health 200, /template 200, one request line per request (verified via observability logs). Cross-site POST /_serverFn/* 403. 30x /api/health all 200.
+- NOT verified: same-origin serverFn success via curl (hand-built payload fails seroval; not a middleware result).
+- Stopped my dev server on 5174.
+- rm list: src/server/lib/cloudflare-rate-limit-store.ts ; src/server/lib/cloudflare-rate-limit-store.test.ts ; src/server/app.test.ts
+
+## 2026-10-22 21:45 — orchestrator: P5 + P6 live check (built Worker, wrangler dev 5177)
+- Headers (CSP frame-ancestors none, Referrer-Policy, nosniff, XFO DENY) on /, /api/health, /api/test, /template; all 200.
+- Browser /template: 4 same-origin /_serverFn calls OK (session + 3 health), healthy + Database reachable, 0 "Something went wrong", no console errors → CSRF + error mw do not block same-origin (covers p5 unverified item). p5: cross-site serverFn POST 403.
+- Read src/start.ts, server-fn-error.ts, rate-limit.ts: match brief.
+- Gates RED only from files that must be deleted (no-delete rule): app.test.ts (old limiter header), cloudflare-rate-limit-store.ts (+test; missing hono-rate-limiter), __tmpcheck/oa.test.ts. Asking user to run rm block now.
+- Codex P5/P6 running. Stopped my wrangler 5177.
+- 21:50 Codex P5/P6: 3 P1, all = the dead files in the pending rm block (store.ts/test, app.test.ts, __tmpcheck). No other finding. ITEM P5, P6 | status=ACCEPTED pending user rm + green gate re-run, then commit.

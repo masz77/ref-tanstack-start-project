@@ -17,9 +17,8 @@ export function buildApp() {
 
 export type AppType = ReturnType<typeof buildApp>
 
-// why: the app is built ONCE per isolate. Rebuilding it per request would create a
-// fresh CloudflareRateLimitStore on every call (the 100-request limit would never
-// trip) and would rebuild the whole OpenAPI tree + event emitter per request.
+// 2026-10-22: dropped the in-memory CloudflareRateLimitStore; the limiter now reads the Cloudflare binding, so this no longer applies to it.
+// why: the app is built ONCE per isolate, not per request, because rebuilding would redo the whole OpenAPI tree and event emitter on every call.
 export const app = buildApp()
 
 // why: the Workers runtime exposes the bindings (D1, KV, ...) through
@@ -28,8 +27,8 @@ export const app = buildApp()
 export async function forwardToApi(request: Request): Promise<Response> {
   const { env } = await import('cloudflare:workers')
 
-  // shortcut: no ExecutionContext is passed, so `c.executionCtx` throws; pass ctx
-  // once the custom Worker entry (P6) exists.
+  // shortcut: `c.executionCtx` throws because src/routes/api/-handler.ts passes only the
+  // request; forward the ctx from src/server.ts via `opts.context` once that handler does.
   return app.fetch(request, env)
 }
 
