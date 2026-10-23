@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { healthQueryOptions } from '@/lib/template/queries'
+import { healthQueryOptions } from '@/modules/health'
 
 export const Route = createFileRoute('/health-demo')({
   component: HealthDemoPage,

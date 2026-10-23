@@ -6,9 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PasswordInput } from '@/components/ui/password-input'
-import { passkey, signIn, signUp } from '@/lib/auth-client'
 import { cacheHeaders } from '@/lib/cache-policy'
-import { useFinalizeSession } from '@/lib/hooks/use-finalize-session'
+import { useFinalizeSession } from '@/modules/identity'
+import { passkey, signIn, signUp } from '@/modules/identity/index.auth'
 
 // Best-effort passkey enrollment. Swallows + reports its own failure so the
 // sign-up flow never blocks on it — the user can add a passkey later from a

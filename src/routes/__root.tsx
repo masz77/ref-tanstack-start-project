@@ -5,8 +5,7 @@ import { ReactQueryDevtoolsPanel } from '@tanstack/react-query-devtools'
 import { createRootRouteWithContext, HeadContent, Outlet, Scripts } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { NotFound } from '@/components/not-found'
-import { useSessionChannel } from '@/lib/hooks/use-session-channel'
-import { AuthSync, type SessionContextValue, SessionProvider } from '@/lib/session-context'
+import { AuthSync, SessionProvider, type SessionContextValue } from '@/modules/identity'
 import { queryClient } from '@/router'
 import appCss from '../styles.css?url'
 
@@ -45,10 +44,6 @@ export const Route = createRootRouteWithContext<{
 })
 
 function RootComponent() {
-  // 2026-05-29: useSessionChannel listens to cross-tab BroadcastChannel sign-in
-  // / sign-out events and mutates the ['session'] react-query cache so route
-  // guards in other tabs re-evaluate within ~1 frame.
-  useSessionChannel()
   return (
     <QueryClientProvider client={queryClient}>
       <SessionProvider>

@@ -19,11 +19,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  apiIndexQueryOptions,
-  healthQueryOptions,
-  testQueryOptions,
-} from '@/lib/template/queries'
+import { apiIndexQueryOptions, healthQueryOptions, testQueryOptions } from '@/modules/health'
 
 export const Route = createFileRoute('/template')({
   component: TemplatePage,

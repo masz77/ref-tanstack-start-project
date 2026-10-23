@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query'
 import { createRouter } from '@tanstack/react-router'
 import { NotFound } from '@/components/not-found'
-import type { SessionContextValue } from '@/lib/session-context'
+import type { SessionContextValue } from '@/modules/identity'
 // Import the generated route tree
 import { routeTree } from './routeTree.gen'
 

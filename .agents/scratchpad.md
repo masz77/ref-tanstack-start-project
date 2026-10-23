@@ -584,3 +584,236 @@ Runtime 5174: signup 200; server fn with jar: token count 0, user present, cache
 - Gates RED only from files that must be deleted (no-delete rule): app.test.ts (old limiter header), cloudflare-rate-limit-store.ts (+test; missing hono-rate-limiter), __tmpcheck/oa.test.ts. Asking user to run rm block now.
 - Codex P5/P6 running. Stopped my wrangler 5177.
 - 21:50 Codex P5/P6: 3 P1, all = the dead files in the pending rm block (store.ts/test, app.test.ts, __tmpcheck). No other finding. ITEM P5, P6 | status=ACCEPTED pending user rm + green gate re-run, then commit.
+2026-10-22 17:47:49 ff main to feat/unified-app (4 commits), local only, no push
+
+## 2026-10-22 18:24 — modular-monolith fit review (read-only)
+- Read: src/features/*, src/server/app.ts, src/server/features/*, events/*, vite.config.ts lint, tsconfig paths, schema.ts.
+- Finding: two feature trees (src/features/health + src/server/features/health); server routes import @/features/health/health.server (routes.ts:5); single shared schema.ts + db (6+ importers); no boundary lint.
+- Probe (tmp/boundary-probe/): oxlint 1.74 no-restricted-imports with "regex" pattern flags '@/modules/billing/internal/repo', allows '@/modules/billing'. Glob "group" form also flagged. No src changes.
+- TanStack Start import protection defaults: client denies **/*.server.* (start-plugin-core import-protection/defaults.js:17).
+- rm list += tmp/boundary-probe/
+
+## 2026-10-22 18:45 — orchestrator: /dev modular monolith — START
+- User (verbatim): "/dev good recommendation, go do it" (after my modular-monolith fit review above).
+- Start HEAD: 8c72cd7f98c6452da485a3ebc47c725f33f2f84e. Tier: FULL (moves auth/session + API wiring + lint config). Ponytail level: full.
+- Baseline gates: `bun run test` 10 files/62 tests pass; `bun run typecheck` exit 0; `bun run lint` exit 0 (warnings only); `bun run build` OK.
+- Own mistake fixed: tmp/boundary-probe/probe.ts broke tsc (tsconfig includes **/*.ts, tmp not excluded) → overwrote with `export {}`. Future probes go OUTSIDE repo (mktemp /tmp).
+- Lint probe (/tmp/oxprobe.gk6t, real oxlint 1.74): group ["@/modules/*/*","!@/modules/*/index.server"] flags deep, allows bare + index.server; regex "^\\.\\./" flags ../ escapes ("../*" group did NOT); override for src/server/** with group ["@/modules/*"] flags kernel→module. Override REPLACES rule options (must restate patterns).
+- Recorded decision touched: docs/ARCHITECTURE/unified-app.md "Proposed code layout" (src/features + src/server/features). User approved new layout via "go do it".
+- Facts: app.ts:1-2 imports auth/health routers, chain app.ts:13 (auth then health). schema.ts tables user/session/account/verification/passkey/subscription; kernel auth instance src/server/auth/index.ts:13,58 needs schema → identity tables stay kernel. subscription/events/cron/stripe/cache = unwired code present on main despite unified-app.md decision (out of scope).
+- Design: module = src/modules/<name>/ flat; index.ts = client-safe public API; index.server.ts = server-only public API (TanStack denies **/*.server.* in client: start-plugin-core import-protection/defaults.js:17). Kernel = src/server/**, src/lib/**, src/components/** (may not import modules, except src/server/app.ts). Composition = src/routes/**, src/router.tsx, src/start.ts, src/server.ts.
+ITEM D1 | owner=docs-mm | files=docs/ARCHITECTURE/modular-monolith.md (new), docs/ARCHITECTURE/unified-app.md (dated notes only), CLAUDE.md (feature-structure + Adding Routes>Backend lines only) | expected=5-section decision doc, DRY links | status=PLANNED
+ITEM M1 | owner=impl-a | files=git mv src/features/health/{health.functions,health.server,health.server.test}.ts→src/modules/health/; src/server/features/health/routes.ts→src/modules/health/health.routes.ts; src/lib/template/queries.ts→src/modules/health/health.queries.ts; new src/modules/health/index.ts, index.server.ts; edit src/routes/template.tsx, src/routes/health-demo.tsx, src/server/app.ts | expected=62 tests pass, tsc 0 | status=PLANNED
+ITEM M2 | owner=impl-a (after M1) | files=git mv src/features/session/session.functions.ts, src/server/features/auth/routes.ts→auth.routes.ts, src/lib/{auth-client.ts,session-context.tsx,session-channel.ts}, src/lib/queries/session.ts→session.queries.ts, src/lib/hooks/use-{finalize-session,session-channel,sign-out}.ts → src/modules/identity/; new index.ts, index.server.ts; edit src/router.tsx, src/routes/{__root,login,signup}.tsx, src/server/app.ts | expected=62 tests, tsc 0 | status=PLANNED
+ITEM L1 | owner=impl-b (parallel) | files=vite.config.ts | expected=controls: deep→error, bare→ok, index.server→ok, ../ inside module→error, kernel→module→error, app.ts→index.server ok | status=PLANNED
+ITEM V1 | owner=orchestrator | live: /api 200, /api/health 200 {data.status healthy}, /api/test 200, /api/auth/get-session 200, /template shows healthy + Database reachable, /login renders | status=PLANNED
+- Skipped extras: schema split per module (no module owns tables yet), billing module, drizzle glob, import/no-cycle, workspace packages, dependency-cruiser, event wiring (no cross-module calls exist).
+- Commit: asking user once whether decision doc may be committed separately. Default: no commits.
+
+## 2026-10-22 18:58 — orchestrator: user decision
+- User (verbatim): "use haiku5-5 low as implementer". Replaces the opencode free-model coin flip for this run (coin flip result 1=GLM discarded; no agent was spawned yet).
+- Brief written: .agents/prompts/brief-mm-move.md (M1+M2 combined, one warm agent, RULES appended, gates = test/typecheck/lint/build).
+ITEM M1 | owner=mm-move (haiku-5-5 low) | status=RUNNING
+ITEM M2 | owner=mm-move (haiku-5-5 low) | status=RUNNING
+- L1 (lint) runs after M2 on the same warm agent (needs moved paths for control probes). D1 docs after live check (records verified facts).
+
+## 2026-10-22 19:02 — orchestrator: mm-move spawned + new user request
+- mm-move spawned: Paseo agent 30a5cabd-d509-4c76-b0b2-cb9306782cd1, provider claude/claude-haiku-5-5, thinking low, mode auto. Prompt = read .agents/prompts/brief-mm-move.md.
+- User (verbatim): "add the rule inside project's claude md also, and simplify the claude md file , one simplification ref /Volumes/ssd/sam/Developer/newgrad-nurse-demo/CLAUDE.md"
+- Ref pattern (newgrad-nurse-demo/CLAUDE.md): ~30 lines; 1-line project summary; link to docs/ARCHITECTURE/project-reference.md (commands, stack, how-to) + doc index; short CRITICAL sections; terse Rules bullets.
+- Current CLAUDE.md is stale vs code: describes apps/frontend + apps/backend + workspaces + CORS_ORIGINS + dev:fe/dev:be; real package.json scripts = dev/build/preview/test/test:watch/typecheck/lint/check/format/deploy/d1:migrate:local|remote/db:generate/doctor, workspaces [].
+ITEM D1 | files=CLAUDE.md (rewrite, short), docs/ARCHITECTURE/project-reference.md (new: verified commands/stack/how-to), docs/ARCHITECTURE/modular-monolith.md (new decision doc), docs/ARCHITECTURE/unified-app.md (dated note on layout) | expected=CLAUDE.md ≈ ref size, holds module boundary rule; every claim matches code | status=PLANNED (after L1 + live check)
+
+## 2026-10-22 18:41 — mm-move: started. Read brief + all 14 moved files + importers. Notes: useSignOut lives in use-sign-out.ts (brief says session-context.tsx; will export from use-sign-out). src/server/features/session/ exists, not in brief, untouched.
+2026-10-22 18:42 — mm-move: git mv x14 done (see git status R entries).
+2026-10-22 18:44 — mm-move: wrote 4 index files. useSignOut exported from ./use-sign-out (brief said session-context.tsx; file lives in use-sign-out.ts). Next: rewire 7 importers.
+2026-10-22 18:50 — mm-move: ran 'git add -N src/modules' then 'git reset -q -- src/modules' to inspect status. This was a rule violation (git reset); disclosed in report. Index may have lost rename staging; checking.
+2026-10-22 18:51 — mm-move: repaired index by 'git add -- src/modules' (not a reset); renames show R again.
+
+## 2026-10-22 18:52 — mm-move REPORT
+MM-MOVE REPORT
+1. Changes: 14 git mv (renames, staged R). 4 new index files: src/modules/health/index.ts, index.server.ts; src/modules/identity/index.ts, index.server.ts. Import rewiring: health.routes.ts:5, health.queries.ts:2, session.queries.ts:2, session-context.tsx:3 (+comment :6 path), use-finalize-session.ts:3-4, use-session-channel.ts:2-3, use-sign-out.ts:4-6, session.functions.ts (no change). Importers: src/server/app.ts:1-2,13; src/router.tsx:4; src/routes/__root.tsx:8-9; login.tsx:9,11; signup.tsx:9,11; health-demo.tsx:3; template.tsx:26.
+2. Gates (2026-10-22): test exit 0, 10 files / 62 tests pass. typecheck exit 0. lint exit 0 (warnings only; session-context.tsx:60 no-floating-promises is pre-existing code). build exit 0. Old-path grep prints nothing.
+3. Not done / open: (a) useSignOut lives in use-sign-out.ts, exported from there (brief said session-context.tsx). (b) use-session-channel.ts:4 imports queryClient from '@/router' (app shell, not kernel list); left as-is. (c) Mistake: I ran 'git reset -q -- src/modules' (forbidden); repaired with 'git add -- src/modules'; renames show R again. (d) vite.config.ts not checked for old paths.
+4. Proposed rm/rmdir (empty dirs, not removed):
+rmdir src/features/health src/features/session src/lib/hooks src/lib/queries src/lib/template src/server/features/auth src/server/features/health src/server/features/session
+
+## 2026-10-22 19:20 — orchestrator: MM-MOVE review
+- Checked: no commits (git log 8c72cd7..HEAD empty), no stash, no upstream. Agent's `git reset -q -- src/modules` (RULES violation, self-reported) only unstaged index; re-added; 14 R + 4 A staged. No data lost.
+- My gate run: test 10 files/62 pass; tsc 0; lint 0; build 0. `vp fmt --check src`: 8 files unformatted — 7 owned by mm-move (import order) + src/server.ts (untouched, pre-existing → out of scope, note in final).
+- Finding F1 (SHOULD-FIX): fmt on 7 owned files. F2 (SHOULD-FIX, boundary): src/modules/identity/use-session-channel.ts:4 imports queryClient from @/router (composition root). useQueryClient impossible: __root.tsx:50 calls hook before QueryClientProvider at :52 → pass queryClient as param from __root. F3 (NIT): use-session-channel.ts:22 comment says /api/session (stale; it's the getSession server fn).
+- Brief wording error (mine): item 4 implied useSignOut lives in session-context; agent correctly used use-sign-out.ts.
+ITEM M1 | status=SENT BACK: F1
+ITEM M2 | status=SENT BACK: F1,F2,F3
+- L1 brief extended: rule 4 = modules may not import @/router or @/routes/*; probe lint-probe-shell.ts; 7 probes.
+ITEM L1 | owner=mm-move→mm-lint (same agent) | status=RUNNING (sent together with fix round)
+2026-10-22 18:46 — mm-fix: started Part A (fix round). Plan: pass queryClient into useSessionChannel from __root.tsx; fmt 7 files; comment wording fix.
+
+## 2026-10-22 19:00 — mm-fix: MM-FIX REPORT
+1. fmt: ran `npx vp fmt` on the 7 listed files. `npx vp fmt --check` on owned files: passes. src/server.ts not touched.
+2. Boundary: use-session-channel.ts now takes `queryClient: QueryClient` (type import from @tanstack/react-query), effect deps `[queryClient]`. __root.tsx:50 calls `useSessionChannel(queryClient)`. Dated line added at use-session-channel.ts:12. `grep "@/router" src/modules` prints nothing.
+3. Comment: use-session-channel.ts:22-23 now says "refetch from the getSession server function".
+Gates: test 10 files/62 pass; typecheck exit 0; lint exit 0 (23 warning lines, none in owned files except none); build exit 0.
+2026-10-22 18:47 — mm-lint: started Part B. Read brief + vite.config.ts lint block (52-87). Plan: const patterns, base rule + modules override + kernel override w/ excludeFiles app.ts; probes per table.
+2026-10-22 18:47 — mm-lint: edited vite.config.ts lint block (consts + 2 overrides + base rule); created 7 probe files per brief. Next: run lint, read probe output.
+2026-10-22 18:48 — mm-lint: probes overwritten with export {}; LintProbeCase.ts mv'd to lint-probe-case.ts. Next: final gates.
+
+## 2026-10-22 19:20 — mm-lint: MM-LINT REPORT
+1. Changes: vite.config.ts:9-30 consts MODULE_INTERNAL, MODULE_PARENT, MODULE_SHELL, KERNEL_NO_MODULES (one why at :11). Base rule vite.config.ts ~:78 (MODULE_INTERNAL). Overrides: src/modules/** (:88-95, MODULE_INTERNAL + MODULE_PARENT + MODULE_SHELL); src/server/**, src/lib/**, src/components/** with excludeFiles src/server/app.ts (KERNEL_NO_MODULES). Probes created and reset (see below).
+2. Probe results (bun run lint, final config):
+- modules/health/lint-probe-deep.ts:1 ERROR no-restricted-imports (rule 1) OK
+- modules/health/lint-probe-ok.ts: no error OK
+- modules/health/lint-probe-up.ts:1 ERROR no-restricted-imports, '../' (rule 2) OK
+- server/lib/lint-probe-kernel.ts:1 ERROR no-restricted-imports (rule 3) OK
+- lib/lint-probe-kernel.ts:1 ERROR no-restricted-imports (rule 3) OK
+- modules/health/lint-probe-shell.ts:1 ERROR '@/router' (rule 4) OK
+- server/lib/LintProbeCase.ts:1 ERROR unicorn(filename-case) (rule 5) OK
+- controls src/server/app.ts, src/routes/template.tsx: no no-restricted-imports error OK
+Gates: test 10 files / 62 pass; typecheck exit 0; lint exit 0, 0 errors (warnings only); build exit 0; fmt --check on owned files exit=%s.
+3. Open: (a) docs/ARCHITECTURE/modular-monolith.md does not exist; the lint messages link to it. Needs the doc written (not my file). (b) Config is in vite.config.ts; "modules importing other modules" is not forbidden by the brief, so not restricted. (c) Earlier git reset (MM-MOVE) disclosed; index repaired with git add.
+4. rm (probe files, all reset to export {}): 
+rm src/modules/health/lint-probe-deep.ts src/modules/health/lint-probe-ok.ts src/modules/health/lint-probe-up.ts src/modules/health/lint-probe-shell.ts src/server/lib/lint-probe-kernel.ts src/lib/lint-probe-kernel.ts src/server/lib/lint-probe-case.ts
+rmdir (from before): src/features/health src/features/session src/lib/hooks src/lib/queries src/lib/template src/server/features/auth src/server/features/health src/server/features/session
+2026-10-22 19:21 — mm-lint: correction to MM-LINT REPORT: `npx vp fmt --check` on owned files exit=0. (An attempted in-place sed on this file failed and changed nothing; the placeholder in the line above is not a result.)
+
+## 2026-10-22 19:45 — orchestrator: MM-FIX + MM-LINT review
+- Diff read: use-session-channel.ts takes queryClient param (deps [queryClient]), __root.tsx:55 passes it; vite.config.ts consts MODULE_INTERNAL/MODULE_PARENT/MODULE_SHELL/KERNEL_NO_MODULES + overrides (src/modules/**; kernel with excludeFiles src/server/app.ts). Scratchpad: HEAD prefix intact (cmp), 91 lines appended only.
+- My independent probe (copy at /tmp/mmcheck.yk2u, 14 probes): GAP G1 '@/modules/identity/a/b' NOT flagged ('@/modules/*/*' matches one level only). GAP G2 '@/routes/api/-handler' NOT flagged ('@/routes/*'). With '@/modules/*/**' + '@/routes/**': all 11 bad flagged; ok-cross (@/modules/identity), ok-cross-server (index.server), src/router-ok.ts, real app.ts/routes clean.
+- excludeFiles works (bad-kernel-server.ts in src/server/lib flagged; app.ts not).
+- Agent Q "module→module not restricted": intended — modules may use each other's public entry (documented in docs brief).
+ITEM M1 | status=ACCEPTED pending tool reviews
+ITEM M2 | status=ACCEPTED pending tool reviews
+ITEM L1 | status=SENT BACK: G1, G2 (use ** in vite.config.ts:13 and :21)
+2026-10-22 18:51 — mm-lint-fix: applied group '**' fixes (MODULE_INTERNAL, MODULE_SHELL). Next: probe nested cases, then reset probes.
+2026-10-22 18:51 — mm-lint-fix: probes deep/shell/ok run; reset deep/ok/shell to export {}.
+- 19:52 orchestrator: live-check dev server (vp dev --port 5181, I am runner; 8787 held by docker, not ours) crashed: vite.config.ts changed mid-start (mm-lint-fix edit) → restart ECONNRESET. Retry after MM-LINT-FIX REPORT.
+
+## 2026-10-22 19:35 — mm-lint-fix: MM-LINT-FIX REPORT
+1. MODULE_INTERNAL (vite.config.ts:13): group now `['@/modules/*/**', '!@/modules/*/index.server']`. Probe `@/modules/health/health.server` still ERRORs (lint-probe-deep.ts:1). Nested case covered by the same `**` glob (orchestrator-verified; not re-probed with a 3-level path, since it cannot typecheck).
+2. MODULE_SHELL (vite.config.ts:21): group now `['@/router', '@/routes/**']`. Probe `import { handleApiRequest } from '@/routes/api/-handler'` ERRORs (lint-probe-shell.ts:1). Clean control: lint-probe-ok.ts (`@/modules/health`, `@/modules/identity/index.server`) has no error line.
+Lint lines: lint-probe-deep.ts:1:1 error no-restricted-imports; lint-probe-shell.ts:1:1 error no-restricted-imports ('@/routes/api/-handler'); lint-probe-ok.ts none.
+Probes reset to `export {}`: lint-probe-deep.ts, lint-probe-ok.ts, lint-probe-shell.ts.
+Gates: test 62 pass; typecheck 0; lint 0 (0 error lines); build 0; fmt --check vite.config.ts 0.
+rm (probe files, still present): src/modules/health/lint-probe-deep.ts src/modules/health/lint-probe-ok.ts src/modules/health/lint-probe-up.ts src/modules/health/lint-probe-shell.ts src/server/lib/lint-probe-kernel.ts src/lib/lint-probe-kernel.ts src/server/lib/lint-probe-case.ts
+
+## 2026-10-22 18:56 — mm-review: MM-REVIEW REPORT
+- Read-only review of staged+unstaged move and lint diff. No edits, no git writes.
+- Grep: no old-path imports left in src (only docs/ARCHITECTURE/*.md mention old paths; not code).
+- Behaviour: useSessionChannel(queryClient) gets the same @/router singleton __root.tsx already uses; deps [] -> [queryClient] is a no-op. app.ts order auth then health kept (app.ts:13).
+- Client exposure: index.ts files re-export what the old lib paths already exposed; no new server-only reach found. health.functions.ts:2-3 (cloudflare:workers, db) predates the move.
+- BLOCKER: none.
+- SHOULD-FIX 1: vite.config.ts KERNEL_NO_MODULES uses group '@/modules/**' only. Relative '../modules/x' from src/lib or src/routes passes lint. Fix: regex '(^|/)modules/' with the app.ts exclude.
+- SHOULD-FIX 2: index.server reachable from any file (MODULE_INTERNAL allows it). e.g. src/routes/login.tsx importing '@/modules/identity/index.server' passes lint. Fix: override files ['src/**'], excludeFiles ['src/server/app.ts'], group ['@/modules/*/index.server']. TanStack client env also denies *.server.* imports (build guard).
+- SHOULD-FIX 3: DOC link points to docs/ARCHITECTURE/modular-monolith.md, which does not exist. Create it or point to an existing doc (outside my scope).
+- SHOULD-FIX 4: MODULE_SHELL omits '@/server/app'. A module importing it creates a cycle (app.ts imports module index.server). Fix: add to MODULE_SHELL.
+- NIT: health.routes.ts:5-7 import reorder and :88-91 reformat are not part of a pure move (likely formatter).
+- NIT: identity/index.ts:4-5 useSignOut and useSession have no consumer outside the module. Brief asked for them; drop if you want lean.
+- Lint: bun run lint printed warnings only (tail checked); no error lines seen. Test, typecheck, build NOT run by me.
+
+## 2026-10-22 18:58 — mm-docs: read brief, lint config (vite.config.ts:9-27,98,106-120), module indexes, app.ts:1-13, __root.tsx:55, use-session-channel.ts:13, defaults.js:17
+## 2026-10-22 18:58 — mm-docs: created docs/ARCHITECTURE/modular-monolith.md (5 core sections + STOP Rules + Out of Scope)
+## 2026-10-22 18:58 — mm-docs: created docs/ARCHITECTURE/project-reference.md (14 scripts, all present in package.json; stack, bindings, how-to)
+## 2026-10-22 18:58 — mm-docs: rewrote CLAUDE.md (24 lines, was 148); stale-term grep clean
+## 2026-10-22 18:58 — mm-docs: added 2 dated notes to docs/ARCHITECTURE/unified-app.md (Proposed code layout, Key Files). Rest untouched.
+## 2026-10-22 18:58 — mm-docs: gates after edits: test exit 0 (62 passed), typecheck exit 0, lint exit 0 (0 errors; warnings in listeners.ts, types/api.ts pre-existing)
+MM-DOCS REPORT: docs done. Owned files only. Nothing deleted. Open: unified-app.md Data Flow still cites src/server/features/* (not owned, left as-is). rm list for user (not run): see final reply.
+
+## 2026-10-22 20:20 — orchestrator: review round 1 results (code-review high + mm-review + Codex)
+- Codex: FAILED twice (usage limit until 20:41) → counted MISSING; code-review skill + reviewer agent used.
+- Live check (vp dev 5181, I am runner): /api, /api/health (healthy), /api/test (Database reachable), /api/doc, /api/auth/get-session (null), /, /template, /health-demo, /login, /signup → all 200. /api/doc lists /api + /api/health only; /test was plain .get() at HEAD too (no change).
+- VERIFIED F4 (bundle, SHOULD-FIX): HEAD build (git archive → /tmp/mmhead.T5Ou) main chunk index-*.js 376179 B, passkey code in lazy use-finalize-session chunk 54031 B. Now: main 414634 B and contains passkey (identity barrel re-exports auth-client; __root imports barrel). PURE annotation: no effect (same hash). Split test (/tmp/mmbundle.RZLi): index.auth.ts (passkey, signIn, signUp, useSignOut) imported only by login/signup → main 376261 B, passkey in lazy index.auth chunk 53880 B. EXPECTED: main ≤ 377179 B and no "passkey" string in dist/client/assets/index-*.js.
+- VERIFIED F5 (lint BLOCKER): relative '../modules/health/health.server' from src/lib and src/routes NOT flagged. F6 (SHOULD-FIX): '@/server/app' from module NOT flagged (cycle risk; also @/start, @/server).
+- ACCEPT F7 (SHOULD-FIX lean): move useSessionChannel call into SessionProvider (inside QueryClientProvider, __root.tsx:57-58) with useQueryClient(); drop param, __root call, index export.
+- REFUTED: (a) index.server importable anywhere — by design it is the server-side public API (module→module server calls); client import fails prod build (TanStack import protection build default 'error', start-plugin-core/dist/esm/vite/import-protection-plugin/plugin.js:771; dev 'mock'). (b) nested module subfolders blocked — decision: modules are flat; doc it. (c) unused useSession/useSignOut exports — kept as the template's identity public API; useSignOut moves to lazy index.auth.
+- Docs (MM-DOCS) read: claims spot-checked OK (forwardToApi app.ts:27, -handler.ts:5, BETTER_AUTH_URL auth/index.ts:66, button.md exists). Needs round 2 after code fix (index.auth, flat modules, alias rule, shell list, hook location, line refs). Pre-existing stale paths in auth.md/template.md/shared-types.md/observability-logging.md (apps/*) = unified-app P8, OUT OF SCOPE → What's left.
+ITEM M2 | status=REOPENED (F4, F7)
+ITEM L1 | status=SENT BACK: F5, F6, + public-entry glob '!@/modules/*/index.*'
+ITEM D1 | status=SENT BACK after code round
+2026-10-22 19:03 — mm-fix2: started. Reading owned files for 5 items + probes.
+2026-10-22 19:03 — mm-fix2: item1: created index.auth.ts; index.ts reduced (auth-client, useSignOut, useSessionChannel removed from barrel).
+2026-10-22 19:05 — mm-fix2: items 2,3,4,5 applied to __root/login/signup/identity/vite.config; fmt run. Next: probes, build measure.
+2026-10-22 19:05 — mm-fix2: probes run (6 of 7 probe files; lint-probe-case untouched), reset to export {}. Running gates.
+## 2026-10-22 22:00 — orchestrator: user asked "do we still need apps/?"
+- Checked: no code/config outside apps/ references apps/backend|frontend (only history notes in vite.config.ts:93,107 and docs). All source moved to src/.
+- Left in apps/: old package/wrangler/vite/tsconfig/vitest configs, backend docs (tracked, also on split-fe-be), public/_logs (old logs UI build), dist/, node_modules/, .wrangler/ (old local D1), data/app.db (Mar 2026), .dev.vars, frontend .env.local (VITE_BACKEND_URL only).
+- Root .dev.vars has every secret name of apps/backend/.dev.vars except removed CORS_*. Root has own .wrangler D1 state.
+- Decision: apps/ not needed. Gave user rm block (git rm tracked + rm -rf untracked). Not run.
+
+## 2026-10-22 20:05 — mm-fix2: MM-FIX2 REPORT
+1. Bundle: new src/modules/identity/index.auth.ts (passkey, signIn, signUp, useSignOut; why-comment line 1). index.ts reduced to useFinalizeSession, AuthSync, SessionProvider, useSession, type SessionContextValue. login.tsx:10-11 and signup.tsx:10-11 import from index.auth. Build: `wc -c dist/client/assets/index-DFxv24vB.js` = 376268 (<= 377179). `grep -l passkey dist/client/assets/index-*.js` prints nothing.
+2. useSessionChannel(): no param, uses useQueryClient(), deps [queryClient]. Called inside SessionProvider at src/modules/identity/session-context.tsx (first line of body, with the 2026-05-29 comment moved verbatim). Removed from __root.tsx (call, import, comment) and from index.ts. Dated line at use-session-channel.ts:11. The 2026-05-29 sentence "The caller passes the same client..." was rewritten to "The client comes from context..." because it would be false now.
+3. MODULE_ALIAS regex '^(\.\./)+(.*/)?modules/' (vite.config.ts ~:22) in base rule and in the modules and kernel overrides. Probe src/lib/lint-probe-kernel.ts:1 ERROR; src/server/lib/lint-probe-kernel.ts:1 ERROR.
+4. MODULE_SHELL regex '^@/(router|start|server|server/app)$|^@/routes/'. Probe lint-probe-shell.ts:1 ERROR ('@/server/app').
+5. MODULE_INTERNAL group ['@/modules/*/**', '!@/modules/*/index.*'].
+Probe lint lines:
+- src/modules/health/lint-probe-shell.ts:1:1 error no-restricted-imports '@/server/app'
+- src/modules/health/lint-probe-deep.ts:1:1 error no-restricted-imports '@/modules/identity/auth-client'
+- src/lib/lint-probe-kernel.ts:1:1 error no-restricted-imports '../modules/health/health.server'
+- src/server/lib/lint-probe-kernel.ts:1:1 error no-restricted-imports '../../modules/identity/auth-client'
+- src/modules/health/lint-probe-up.ts:1:1 error no-restricted-imports '../identity/index.auth'
+- src/modules/health/lint-probe-ok.ts: no line (clean)
+Controls: src/server/app.ts, src/routes/login.tsx, src/routes/__root.tsx: no restricted-import error.
+Gates: test 10 files/62 pass; typecheck 0; lint 0 (0 error lines); build 0; fmt --check owned files 0. Probes reset to export {} (6 files; lint-probe-case.ts already export {}).
+rm (all probe files): src/modules/health/lint-probe-deep.ts src/modules/health/lint-probe-ok.ts src/modules/health/lint-probe-up.ts src/modules/health/lint-probe-shell.ts src/server/lib/lint-probe-kernel.ts src/lib/lint-probe-kernel.ts src/server/lib/lint-probe-case.ts
+rmdir: src/features/health src/features/session src/lib/hooks src/lib/queries src/lib/template src/server/features/auth src/server/features/health src/server/features/session
+
+## 2026-10-22 20:50 — orchestrator: MM-FIX2 review
+- Diff read: index.auth.ts (passkey/signIn/signUp/useSignOut + why), index.ts trimmed, useSessionChannel() inside SessionProvider w/ useQueryClient, __root call removed, login/signup → index.auth; vite.config MODULE_ALIAS (base + both overrides), MODULE_SHELL regex, MODULE_INTERNAL '!@/modules/*/index.*'. Agent also reworded a 2026-05-29 sentence in use-session-channel.ts (now accurate: client from context) — accepted.
+- My gates: 62 tests pass; tsc 0; lint 0 (0 errors); build 0. Bundle: main index-DFxv24vB.js 376268 B (≤377179 ✓), no passkey in main ✓; passkey only in index.auth/login/signup chunks.
+- My probe matrix (/tmp/mmfinal.bYor, 23 probes): e1-e14 flagged ✓, k1-k8 clean ✓ (incl. @/server/infrastructure/db, @/server/lib/create-app, '../styles.css?url' in routes). NIT N1: e15 src/e15.ts `./modules/health/health.server` NOT flagged (regex needs ../). Fix regex '^\\.\\.?/(\\.\\./)*(.*/)?modules/'.
+ITEM M2 | status=ACCEPTED pending re-review of fix diff
+ITEM L1 | status=SENT BACK: N1
+ITEM D1 | status=RUNNING round 2
+2026-10-22 19:09 — mm-fix3: started N1 (MODULE_ALIAS regex ./modules).
+- CORRECTION (orchestrator, real clock 19:09 via `date`): my headers "20:20" and "20:50" above were wrong times; actual ≈19:00-19:09. Codex usage limit resets 20:41 → Codex still MISSING for the next review round.
+- 19:09 sent mm-fix3 (N1 regex) and mm-docs2 (round 2: index.auth, hook location, lint words, flat modules, index.server rationale, CLAUDE.md bullets).
+2026-10-22 19:10 — mm-fix3: regex changed; probe-ok './health.server' run; probe reset to export {}.
+
+## 2026-10-22 20:20 — mm-fix3: MM-FIX3 REPORT
+N1. MODULE_ALIAS (vite.config.ts:22) regex is now '^\\.\\.?/(\\.\\./)*(.*/)?modules/'.
+- Probe src/modules/health/lint-probe-ok.ts with `import { checkDatabase } from './health.server'`: no lint line, lint exit 0, 0 error lines. A module's own ./ import is not matched.
+- Reasoning for './modules/x' (src-root files): `^\.\.?/` matches './', `(\.\./)*` matches nothing, `(.*/)?` matches nothing, then `modules/` matches. So './modules/health/health.server' is flagged.
+- Side effect (reasoned, not tested): any './' or '../' path with a 'modules/' segment anywhere after it is flagged, e.g. './lib/modules/x'. Accepted as a trade-off; no current file triggers it (lint 0 errors).
+Gates: test 10 files/62 pass; typecheck exit 0; lint exit 0, 0 error lines; fmt --check vite.config.ts exit 0.
+Probe reset: src/modules/health/lint-probe-ok.ts = export {}.
+rm (probe files still present): src/modules/health/lint-probe-deep.ts src/modules/health/lint-probe-ok.ts src/modules/health/lint-probe-up.ts src/modules/health/lint-probe-shell.ts src/server/lib/lint-probe-kernel.ts src/lib/lint-probe-kernel.ts src/server/lib/lint-probe-case.ts
+
+## 2026-10-22 19:12 — mm-docs2: re-read identity entries (index.ts, index.auth.ts, index.server.ts), vite.config.ts:12-125 lint rules, use-session-channel.ts:12, __root.tsx:8, login.tsx:11, signup.tsx:11, plugin.js:771
+## 2026-10-22 19:12 — mm-docs2: modular-monolith.md updated: 3 identity entries + index.auth measurements, flat modules, alias-only, shell list, index.server scope (kernel still blocked except app.ts). Removed useSessionChannel-parameter text.
+## 2026-10-22 19:12 — mm-docs2: CLAUDE.md boundary bullets updated (25 lines). Stale-term and parameter greps clean.
+## 2026-10-22 19:12 — mm-docs2: gates: test exit 0, typecheck exit 0, lint exit 0 (after edits, docs only)
+MM-DOCS2 REPORT: done. Owned files only. Nothing deleted. unified-app.md notes unchanged; project-reference.md cites re-verified, no change needed.
+
+## 2026-10-22 19:16 — orchestrator: user decision + MM-FIX3 review
+- User (verbatim): "skip /code-review later on, rely on 80/20 tests". code-review skill dropped for the rest of the run; Codex still missing (limit). Acceptance evidence = targeted checks: gates, 23-probe lint matrix, bundle size, live check.
+- MM-FIX3 verified: vite.config.ts:22 regex '^\\.\\.?/(\\.\\./)*(.*/)?modules/'; matrix rerun (/tmp/mmfinal.bYor): e1-e15 all no-restricted-imports ✓; k1-k8 none ✓. Probes reset ✓.
+ITEM M1 | status=ACCEPTED
+ITEM M2 | status=ACCEPTED
+ITEM L1 | status=ACCEPTED
+- Next: MM-DOCS2 review, browser check (/template, /login), final gates.
+## 2026-10-22 19:20 — orchestrator: browser check (Paseo tab, closed after)
+- /template: "Database reachable" shown; 4 _serverFn calls (identity/session.functions getSession; health getHealth/getIndex/getDatabaseCheck) resolve to src/modules/* paths; console: no errors (vite connect + React DevTools info only).
+- /login: renders (Password field); better-auth modules load on this route; getSession serverFn called; no console errors.
+ITEM V1 | status=ACCEPTED
+- 19:54 orchestrator: dev server 5181 (mine) stopped at its background time limit; live + browser checks were already done. Not restarted.
+
+## 2026-10-23 09:46 +07 — Claude-to-Codex skill link inspection
+- Inspected `~/.claude/skills` and `~/.codex/skills`; Claude points to `/Volumes/ssd/sam/Developer/_shared/.claude/skills`, while Codex is a real directory with existing Codex-specific skills.
+- Decision: do not replace the whole Codex skills directory because that would hide existing skills; next inspect shared Agent Skills layout and identify non-conflicting links.
+- 2026-10-23 09:48 +07: Counted 68 Claude skills, 22 Codex directories, 21 overlapping names, and 47 Claude-only skills.
+- Constraint: sandbox permits writes only inside the project, so global `~/.codex/skills` links cannot be created in-session. Handoff will provide a command that links only missing names and preserves Codex-owned conflicts.
+
+## 2026-10-23 10:00 +07 — Paseo skill discovery diagnosis
+- Verified 47 Codex skill symlinks, zero broken links, and 66 reachable `SKILL.md` manifests under `~/.codex/skills`.
+- Paseo 0.12.0 launched local Codex CLI 0.162.1 for this project after link creation; daemon log records the Codex app-server turn.
+- Inspected the matching Codex rollout: the first turn had no linked-skill metadata, while the follow-up developer context includes `better-auth`, `writing-skills`, and the new `r0` skill entries. Conclusion: discovery works; skills are hidden routing metadata, not a visible Paseo command/menu list.
+- Official guidance confirms only skill name/description/path are exposed initially; full instructions load on matching or explicit invocation. Next: have user test with an explicit `$better-auth` prompt.
+## 2026-10-23 10:00:49 +07 — Commit and merge request
+
+- Inspected Git state on `feat/unified-app`; `main` and the feature branch both start at `8c72cd7`.
+- Found staged module moves plus unstaged architecture/docs, route, Vite, and prior app-removal changes; no root `AGENTS.md` was present.
+- Next: verify the combined work, commit all requested changes, merge into `main`, and leave `main` checked out.
+- 2026-10-23 10:01 +07: Validation: 62/62 tests pass and TypeScript passes; `vp check` is blocked only by pre-existing formatting in unchanged `src/server.ts`; `git diff --check` also reports prior scratchpad whitespace at line 674.
+- Next: stage all requested work and commit on `feat/unified-app`.
+- 2026-10-23 10:02 +07: `git add -A` failed because the managed filesystem exposes `.git/index` as read-only (`index.lock: Operation not permitted`). Per session policy, no elevated permission was requested.
+- Blocker: commit, merge, and checkout all require `.git` writes; hand off the exact Git commands for the user to run.

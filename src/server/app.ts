@@ -1,5 +1,5 @@
-import authRouter from '@/server/features/auth/routes'
-import index from '@/server/features/health/routes'
+import { healthRouter } from '@/modules/health/index.server'
+import { authRouter } from '@/modules/identity/index.server'
 import configureOpenAPI from '@/server/lib/configure-open-api'
 import createApp from '@/server/lib/create-app'
 
@@ -10,7 +10,7 @@ export function buildApp() {
 
   configureOpenAPI(app)
 
-  const routes = app.route('/', authRouter).route('/', index)
+  const routes = app.route('/', authRouter).route('/', healthRouter)
 
   return routes
 }

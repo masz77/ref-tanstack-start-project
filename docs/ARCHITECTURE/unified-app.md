@@ -39,6 +39,8 @@ Removed env vars: `CORS_ORIGINS`, `CORS_MAX_AGE` (P3), `VITE_BACKEND_URL` (P2).
 
 ## Proposed code layout
 
+2026-10-22: feature code moved from `src/features/<name>/` to `src/modules/<name>/`, with public `index.ts` / `index.server.ts` entries; the `src/features/` tree below is superseded. See [Modular Monolith](./modular-monolith.md).
+
 ⬜ Everything in this tree is **planned** — not built yet. Existing files that the port keeps are
 noted in parentheses.
 
@@ -82,6 +84,8 @@ Naming rules for the new code:
   by default; a `src/server/**` folder rule must be configured explicitly ⬜ (planned in P5).
 
 ## Key Files
+
+2026-10-22: the `src/features/<feature>/…` rows below are superseded by `src/modules/<name>/`; see [Modular Monolith § Key Files](./modular-monolith.md#key-files).
 
 | File | Purpose |
 |------|---------|
